@@ -1,0 +1,20 @@
+-- MercadoTech RLS Policies (Reference Only)
+-- This file will be populated in Fase 2.3
+-- The source of truth is the migrations in supabase/migrations/
+-- RLS policies are created in migration 0017_create_rls_policies.sql
+
+-- Policies to be implemented in Fase 2.3:
+-- - profiles: SELECT (owner + admin), UPDATE (owner only, role not editable)
+-- - categories: SELECT (all), INSERT/UPDATE/DELETE (admin only)
+-- - products: SELECT (active or owner), INSERT (authenticated seller), UPDATE/DELETE (owner)
+-- - product_images: inherit product visibility, write access from owner
+-- - cart_items: full access only to owner
+-- - orders: SELECT (buyer, vendors in order, admin), UPDATE (vendor or buyer), via checkout function
+-- - order_items: SELECT (buyer, vendors, admin)
+-- - questions: SELECT (all), INSERT (authenticated), UPDATE answer (vendor), DELETE (author/admin)
+-- - reviews: SELECT (all), INSERT (verified buyer), UPDATE (author), DELETE (author/admin)
+-- - favorites: full access only to owner
+-- - product_views: SELECT (vendor/admin), INSERT (authenticated)
+-- - support_articles: SELECT (published), INSERT/UPDATE/DELETE (admin)
+-- - support_tickets: SELECT (owner/admin), INSERT (authenticated), UPDATE (owner/admin), no DELETE
+-- - ticket_messages: full visibility within ticket, INSERT (owner/admin)
