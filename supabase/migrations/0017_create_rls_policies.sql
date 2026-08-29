@@ -24,8 +24,8 @@ create policy "profiles_select_policy"
 -- UPDATE: user can update own profile but cannot change role
 create policy "profiles_update_policy"
   on public.profiles for update
-  with check (id = auth.uid())
-  using (id = auth.uid());
+  using (id = auth.uid())
+  with check (id = auth.uid());
 
 grant select on public.profiles to anon, authenticated;
 grant update on public.profiles to authenticated;
