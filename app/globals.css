@@ -1,26 +1,91 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Light theme */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 3.6%;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 3.6%;
+
+  --primary: 262 80% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 96.1%;
+  --secondary-foreground: 0 0% 9%;
+
+  --muted: 0 0% 96.1%;
+  --muted-foreground: 0 0% 45.1%;
+
+  --accent: 0 84.3% 60.2%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84.3% 60.2%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 89.8%;
+  --input: 0 0% 89.8%;
+  --ring: 262 80% 50%;
+  --ring-offset: 0 0% 100%;
+
+  --success: 142.3 70.6% 45.3%;
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38.7 92.1% 50.2%;
+  --warning-foreground: 0 0% 100%;
+
+  --radius: 0.5rem;
+  --container-width: 1280px;
+
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 3.6%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --primary: 262 80% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+
+    --accent: 0 84.3% 60.2%;
+    --accent-foreground: 0 0% 9%;
+
+    --destructive: 0 84.3% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 262 80% 50%;
+    --ring-offset: 0 0% 3.6%;
+
+    --success: 142.3 70.6% 45.3%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38.7 92.1% 50.2%;
+    --warning-foreground: 0 0% 9%;
+
+    color-scheme: dark;
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
