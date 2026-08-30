@@ -1,5 +1,6 @@
 -- MercadoTech RLS Policies (Reference Snapshot)
 -- Source of truth: supabase/migrations/0017_create_rls_policies.sql
+-- (knowledge_embeddings: supabase/migrations/0029_knowledge_embeddings_rls.sql)
 -- DO NOT manually edit this file — it reflects the migration state.
 
 -- ============================================================================
@@ -122,6 +123,18 @@
 -- DELETE: Not allowed
 
 -- ============================================================================
+-- KNOWLEDGE_EMBEDDINGS (Sesión 4, RAG)
+-- ============================================================================
+-- SELECT: authenticated only (decisión 1 de la spec: la IA exige sesión —
+--         sin GRANT a anon, la pestaña de búsqueda IA y los asistentes
+--         quedan bloqueados para anónimos en vez de mostrarse rotos)
+-- INSERT/UPDATE/DELETE: sin política ni GRANT — solo el service role escribe
+--         (Route Handler de indexación y scripts/index-all.ts, Fase 4.3)
+-- source_id sin FK dura: apunta a products o support_articles según
+--         source_type; fichas huérfanas posibles si se borra el origen, las
+--         descarta el service de búsqueda al hidratar (Fase 4.4)
+
+-- ============================================================================
 -- GRANTs SUMMARY
 -- ============================================================================
 -- anon role:
@@ -133,3 +146,7 @@
 --           product_views, support_tickets, ticket_messages
 --   UPDATE: products, product_images, cart_items, orders, questions, reviews, support_tickets
 --   DELETE: products, product_images, cart_items, questions, reviews, favorites
+--
+-- EXECUTE (functions):
+--   create_order_from_cart: authenticated only
+--   match_knowledge: authenticated only

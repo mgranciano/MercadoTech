@@ -8,7 +8,7 @@
 -- ============================================================================
 
 create extension if not exists "uuid-ossp" schema extensions;
-create extension if not exists "pgvector" schema extensions;
+create extension if not exists "vector" schema extensions;
 
 -- ============================================================================
 -- PROFILES TABLE
@@ -249,6 +249,31 @@ create index idx_ticket_messages_ticket_id on public.ticket_messages(ticket_id);
 alter table public.ticket_messages enable row level security;
 
 -- ============================================================================
+-- KNOWLEDGE_EMBEDDINGS TABLE (Sesión 4, RAG)
+-- ============================================================================
+
+create table public.knowledge_embeddings (
+  id uuid primary key default gen_random_uuid(),
+  source_type text not null check (source_type in ('producto', 'articulo_soporte')),
+  source_id uuid not null,
+  chunk_index integer not null default 0,
+  content text not null,
+  embedding extensions.vector(384) not null,
+  metadata jsonb not null default '{}',
+  created_at timestamptz not null default now(),
+  unique (source_type, source_id, chunk_index)
+);
+
+comment on column public.knowledge_embeddings.embedding is
+  'vector(384) fijo para sentence-transformers/all-MiniLM-L6-v2. Cambiar de modelo con otra dimensión exige ALTER COLUMN ... TYPE vector(N) + recrear el índice HNSW y la función match_knowledge.';
+
+create index idx_knowledge_embeddings_hnsw
+  on public.knowledge_embeddings
+  using hnsw (embedding extensions.vector_cosine_ops);
+
+alter table public.knowledge_embeddings enable row level security;
+
+-- ============================================================================
 -- TRIGGERS & FUNCTIONS
 -- ============================================================================
 
@@ -366,3 +391,42 @@ $$ language plpgsql security definer set search_path = public;
 
 revoke execute on function public.create_order_from_cart(uuid) from public, anon;
 grant execute on function public.create_order_from_cart(uuid) to authenticated;
+
+-- Matching semántico de knowledge_embeddings (Sesión 4, RAG). SECURITY
+-- INVOKER: solo hace SELECT, respeta la visibilidad del caller (RLS exige
+-- sesión).
+create function public.match_knowledge(
+  query_embedding extensions.vector(384),
+  p_source_type text default null,
+  match_count int default 5,
+  similarity_threshold float default 0.3
+)
+returns table (
+  source_type text,
+  source_id uuid,
+  content text,
+  metadata jsonb,
+  similarity float
+)
+language plpgsql
+security invoker
+set search_path = public, extensions
+as $$
+begin
+  return query
+  select
+    ke.source_type,
+    ke.source_id,
+    ke.content,
+    ke.metadata,
+    1 - (ke.embedding <=> query_embedding) as similarity
+  from public.knowledge_embeddings ke
+  where (p_source_type is null or ke.source_type = p_source_type)
+    and 1 - (ke.embedding <=> query_embedding) >= similarity_threshold
+  order by ke.embedding <=> query_embedding
+  limit match_count;
+end;
+$$;
+
+revoke execute on function public.match_knowledge(extensions.vector, text, int, float) from public, anon;
+grant execute on function public.match_knowledge(extensions.vector, text, int, float) to authenticated;
