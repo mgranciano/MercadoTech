@@ -12,7 +12,7 @@ MercadoTech es un marketplace de productos tecnológicos donde compradores naveg
 
 ## Comandos
 
-Scripts npm implementados (actualizados en Sesión 3):
+Scripts npm implementados (actualizados en Sesión 4):
 
 ```bash
 npm run dev          # Inicia dev server (Next.js, puerto 3000)
@@ -23,6 +23,7 @@ npm run type-check   # Verificación TypeScript strict (tsc --noEmit)
 npm run test         # Tests unitarios (Jest, por implementar)
 npm run test:e2e     # Tests e2e (Playwright, por implementar)
 npm run db:types     # Regenera types/database.ts desde el esquema local
+npx tsx scripts/index-all.ts  # Reindexa todo el catálogo + FAQ en knowledge_embeddings (Sesión 4)
 ```
 
 ---
@@ -75,12 +76,15 @@ UI (React) → Hooks → Services → Supabase (con RLS)
   `(seller)/vendedor/{productos,productos/[id]/editar,publicar,pedidos}` —
   el panel de vendedor vive bajo el prefijo `/vendedor/...` para no chocar
   con las rutas de comprador.
-- `lib/constants/`: `catalog.ts`, `product.ts`, `orders.ts`, `roles.ts`.
+- `lib/constants/`: `catalog.ts`, `product.ts`, `orders.ts`, `roles.ts`,
+  `ai.ts` (tunables de IA, Sesión 4), `tickets.ts`.
 
 **Verificación de capas** (deben devolver vacío):
 ```bash
 grep -rl "@/lib/supabase" components hooks
 grep -rl "from \"@/services" components
+grep -rln "@huggingface" --include="*.ts" --include="*.tsx" . | grep -v node_modules | grep -v lib/ai
+grep -rl "lib/supabase/admin" app components hooks services | grep -v api/v1
 ```
 
 ---
@@ -136,6 +140,22 @@ grep -rl "from \"@/services" components
   (`useSellerOrders.move()`), no en el componente ni en el service: valida
   contra `ORDER_STATUS_FLOW` antes de llamar `updateOrderStatus`.
 
+### Convenciones aprendidas en Sesión 4
+
+- **La UI nunca importa `lib/ai/`:** el navegador llega a la IA solo vía
+  hook → `fetch` a `app/api/v1/*` → service → `lib/ai/`.
+- **El cliente admin (`lib/supabase/admin.ts`) solo vive en Route Handlers
+  y `scripts/`:** nunca en `components/`, `hooks/` ni `services/` — los
+  services de IA reciben el cliente inyectado por el caller.
+- **Tunables de IA en `lib/constants/ai.ts`:** modelos, dimensión del
+  embedding, umbrales de similitud y presupuesto de contexto. El modelo de
+  chat se sobreescribe por `HUGGINGFACE_CHAT_MODEL` si Hugging Face lo
+  retira — nunca se hardcodea ni se cambia en código.
+- **`knowledge_embeddings` es una tabla discriminada por `source_type`**
+  (`'producto'` / `'articulo_soporte'`), sin FK dura en `source_id`
+  (apunta a dos tablas origen distintas): fichas huérfanas posibles, las
+  descarta quien hidrata (`vector-search.service`).
+
 ---
 
 ## Fuente de verdad de la base de datos
@@ -171,7 +191,7 @@ Si la respuesta a (2) es "adelanto", no lo hagas. Si a (1) es "sí", detente.
 - **Backend/DB:** Supabase (PostgreSQL + RLS)
 - **Autenticación:** Supabase Auth
 - **Storage:** Supabase Storage (imágenes)
-- **AI:** Claude API (sesiones 4, 8)
+- **AI:** Hugging Face Inference (embeddings + chat, sesión 4); voz en sesión 8
 - **Testing:** Playwright (e2e), Jest (unitarios)
 
 ---
@@ -194,14 +214,19 @@ La Fase 2.1 implementó:
 - **Sesión 2:** completa, incluidas las Fases 2.6 y 2.7 (commits `88b0681`, `8a472ee`).
 - **Sesión 3:** Fases 3.1–3.9 construidas, verificadas y commiteadas (una
   fase por commit; ver `docs/BITACORA.md` para los hashes).
-- **Sesión 4 en adelante:** RAG real para `components/shared/AIChatbot.tsx`
-  (UI-only por ahora), voz, `app/api/v1/`.
-- Detalle completo: `docs/BITACORA.md` (bitácora acumulativa) y
-  `docs/SESION3_CHECKLIST.md` (pasada de calidad de la Fase 3.8).
+- **Sesión 4:** Fases 4.1–4.8 construidas, verificadas y commiteadas. RAG
+  real: `lib/ai/`, `app/api/v1/{chat,reindex,search/semantic}`, páginas
+  `/asistente` y `/soporte`. Desviación: `components/shared/AIChatbot.tsx`
+  (el FAB de la Fase 3.9) sigue sin conectar al RAG — ver deuda técnica en
+  `docs/BITACORA.md`.
+- **Sesión 5 en adelante:** voz, `app/api/v1/` sigue creciendo.
+- Detalle completo: `docs/BITACORA.md` (bitácora acumulativa),
+  `docs/SESION3_CHECKLIST.md` (pasada de calidad de la Fase 3.8) y
+  `docs/RAG.md` (flujo RAG, casos de prueba, calibración).
 
 ---
 
-*Última actualización: Sesión 3 (cierre)*
+*Última actualización: Sesión 4 (cierre)*
 
 <!-- BEGIN:nextjs-agent-rules -->
 

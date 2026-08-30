@@ -7,6 +7,222 @@ Documenta lo **construido**, no el plan — donde el código difiere de la spec
 
 ---
 
+## Sesión 4 — Integrando IA en tu SaaS con RAG (2026-08-30)
+
+**Nota de alcance:** las 8 fases (4.0–4.8) se ejecutaron en dos tramos de la
+misma conversación, un commit por fase como pide la spec. El primer tramo
+cubrió el Prompt 0 y las Fases 4.1–4.2; el segundo, a pedido explícito del
+usuario (saltando la 4.2, ya hecha, pero completando 4.3–4.8 en el orden
+correcto en vez del orden pedido originalmente, que se saltaba 4.3–4.4),
+cerró la sesión.
+
+### Fase 4.0 — Verificación de sesión 3, token y dependencias (commit `9b8a658`)
+
+**Construido:** confirmó sesión 3 terminada (`npm run build` limpio), token
+de Hugging Face verificado con un smoke test real contra la API (embedding
+de 384 dimensiones, completion con `meta-llama/Llama-3.1-8B-Instruct` sin
+rotar), instaló `@huggingface/inference` y `tsx`, agregó las 3 variables a
+`.env.example`.
+
+**Hallazgo y corrección:** el conteo de productos activos no coincidía con
+el esperado (15, no 14) por una fila de prueba manual ajena al seed
+(`Teclado mecánico RGB de prueba`); confirmado con el usuario, se borró.
+
+### Fase 4.1 — Infraestructura vectorial (commit `08bc160`)
+
+**Construido:** 4 migraciones nuevas (`0026`–`0029`): extensión `vector`,
+tabla `knowledge_embeddings` (una tabla discriminada por `source_type`, sin
+FK dura en `source_id`), índice HNSW, RPC `match_knowledge` (`SECURITY
+INVOKER`), RLS (SELECT solo `authenticated`).
+
+**Decisiones:**
+- **Una tabla, no dos gemelas:** `match_knowledge` necesita buscar en ambas
+  fuentes a la vez (chat de soporte) o filtrar a una (catálogo) sin `UNION`.
+- **`SECURITY INVOKER`, no `DEFINER`** (a diferencia de
+  `create_order_from_cart`): solo hace `SELECT`, debe respetar la RLS del
+  caller, no saltársela.
+- **`source_id` sin FK:** apunta a `products` o `support_articles` según
+  `source_type` — Postgres no soporta FK condicional. Fichas huérfanas
+  posibles; las descarta el service de búsqueda (4.4) y las limpia el
+  endpoint de reindex (4.3).
+
+**Problemas y solución:**
+- Faltaba `supabase/config.toml` en el repo (nunca se commiteó, aunque el
+  stack Docker ya corría) — se recreó con `supabase init` y
+  `project_id=mercadotech` para que coincidiera con los contenedores.
+- **Bug de seguridad detectado y corregido en la misma fase:** la política
+  RLS inicial usaba `using (true)`, confiando en que el `GRANT` restringiera
+  a `anon`. Pero Supabase local otorga por defecto TODOS los privilegios a
+  `anon` en toda tabla nueva (`ALTER DEFAULT PRIVILEGES`, verificado contra
+  `information_schema.role_table_grants`) — el `GRANT` era solo
+  documentación. Se corrigió a `using (auth.uid() is not null)` +
+  `revoke select ... from anon` explícito, verificado con una fila de prueba
+  real (`anon` → `42501`; sesión `authenticated` → ve la fila).
+
+### Fase 4.2 — Capa de IA y servicio de embeddings (commit `de58000`)
+
+**Construido:** `lib/constants/ai.ts` (14 tunables documentados),
+`lib/ai/embeddings.ts` (`generateEmbedding`, `buildProductEmbeddingText`,
+`buildSupportArticleEmbeddingText`), `lib/ai/completion.ts`
+(`generateCompletion`, errores distintos por causa), `lib/ai/prompts.ts`
+(instrucciones de los dos modos + `buildRagUserMessage`),
+`services/embedding.service.ts` (orquesta con cliente admin inyectado).
+
+**Decisión:** embeddings usa el SDK (`InferenceClient.featureExtraction`);
+chat usa `fetch` al router OpenAI-compatible — decisión del proveedor (Guía
+HF, lecciones 1 y 2), no preferencia de estilo.
+
+### Fase 4.3 — Indexación automática (commit `cc228b9`)
+
+**Construido:** `lib/api-response.ts` (`apiError`),
+`app/api/v1/reindex/route.ts` (primer Route Handler del proyecto; sesión
+401, body 400, admin + `embedding.service`, limpia fichas huérfanas),
+`services/indexing-trigger.service.ts` (fire-and-forget, `console.warn` si
+falla), `useProductForm`/`useSellerProducts` ampliados,
+`scripts/index-all.ts`.
+
+**Verificado en vivo:** editar un producto real por la UI (`seller1`)
+disparó el reindex — la ficha se actualizó (upsert, sin duplicar); insertar
+y luego borrar un producto de prueba por SQL, llamando al mismo endpoint,
+probó los tres caminos (crear/editar → `indexed`, borrar → `removed`); con
+el token renombrado, la publicación siguió funcionando y apareció el
+`console.warn` esperado.
+
+### Fase 4.4 — Búsqueda semántica en el catálogo (commit `b3a9f90`)
+
+**Construido:** `services/vector-search.service.ts` (`searchByEmbedding`,
+`searchProducts`), `app/api/v1/search/semantic/route.ts`,
+`hooks/useSemanticSearch.ts`, pestañas "Coincidencia exacta"/"Resultados con
+IA" en `/buscar` (mismo `ProductGrid`, badge de similitud opcional vía
+props).
+
+**Verificado en vivo:** "audífonos para el gimnasio" → Sony WH-1000XM5
+primero (41%) en la pestaña IA, mientras la pestaña exacta no encuentra
+nada; "algo para conectar mi casa a internet" → TP-Link Archer AXE300
+primero (50%); sin sesión, la pestaña IA muestra el aviso de login con
+`redirectTo` correcto; "autos usados" trajo un resultado de ruido (Cisco
+Catalyst 9200, 34%) — primera señal de que el threshold necesitaría
+calibrarse (4.8).
+
+### Fase 4.5 — Constructor de contexto (commit `a484de5`)
+
+**Construido:** `lib/ai/context-builder.ts`, función pura (selección por
+similitud/longitud mínima, presupuesto de caracteres con truncado o
+descarte de la última fuente). Demostración en frío con 8 fuentes de
+ejemplo, verificada exacta contra el cálculo manual antes de escribir el
+código.
+
+### Fase 4.6 — Servicio conversacional y endpoint (commit `43590da`)
+
+**Construido:** `types/chat.ts`, `services/chat.service.ts` (`ask`, orquesta
+búsqueda → contexto → completion sin reimplementar nada),
+`app/api/v1/chat/route.ts` (401/400/422, log estructurado por consulta). Se
+amplió `vector-search.service.ts` con `searchKnowledge` (búsqueda sin
+hidratar, reutilizada tanto por `searchProducts` como por `chat.service`).
+
+**Verificado en vivo:** compras y soporte responden citando fuentes reales
+con sus ids; sin cookie → 401; `mode` inválido → 422; body inválido → 400;
+los logs estructurados aparecen en la terminal del server con el formato
+exacto de la spec.
+
+### Fase 4.7 — Interfaz del asistente (commit `15e6f02`)
+
+**Construido:** `hooks/useChat.ts` (hidrata imagen/precio de fuentes tipo
+producto client-side, vía `product.service`), `services/ticket.service.ts`
++ `hooks/useMyTickets.ts`, `components/chat/*` (puros: props y callbacks,
+sin conocer el endpoint ni Supabase), `app/(shop)/asistente` y `/soporte`,
+`UserMenu`/`MobileNav`/middleware ampliados.
+
+**Problema y solución (bloqueaba TODA la verificación por navegador):**
+ningún usuario del seed podía iniciar sesión por password — GoTrue v2.196.0
+exige una fila en `auth.identities` que `seed.sql` nunca crea (bug
+preexistente, no de esta sesión). Se parcheó en runtime (`insert into
+auth.identities...` para los 6 usuarios del seed, más
+`instance_id`/`aud`/`role` en `auth.users`) para poder probar; el parche se
+pierde en el próximo `db reset` — `seed.sql` sigue sin tocarse (restricción
+de la sesión).
+
+**Verificado en vivo:** "laptop liviana para la universidad" en `/asistente`
+cita 2 productos reales con mini-cards de imagen/precio; clic en una fuente
+abre el producto correcto; `buyer1` ve su ticket del seed en "Mis tickets"
+(el otro pertenece a `buyer2`, no a `buyer3` como decía la spec — desviación
+del seed real); anónimo en `/asistente` → `/login?redirectTo=/asistente`;
+con el token renombrado, el chat responde con el mensaje inline "No pude
+procesar tu consulta, intenta de nuevo." y el resto de la app sigue
+funcionando.
+
+### Fase 4.8 — Calibración y `docs/RAG.md` (commit `a18a6d4`)
+
+**Construido:** `docs/RAG.md` completo (flujo, 6 casos con evidencia,
+calibración, tabla de síntomas).
+
+**Calibración:** 9 consultas reales mostraron que el threshold 0.3 dejaba
+pasar ruido (hasta 0.43 en artículos de soporte — más alto que el 0.1–0.2
+que documentó ReadHub). Subirlo a 0.44 eliminaba ese ruido pero también
+mataba el caso insignia de la sesión (Sony WH-1000XM5 al 41% para
+"audífonos para el gimnasio"): no hay un único número que separe limpio
+ambos casos en este corpus. Se subió a **0.35** — prioriza no perder
+coincidencias reales sobre eliminar todo el ruido; el ruido de soporte que
+sigue colando no rompe la experiencia porque las instrucciones del modo
+hacen que el modelo admita igual que no tiene la información.
+
+---
+
+### (a) Criterios de aceptación de la sesión (spec, sección "Criterios de aceptación")
+
+| Criterio | Estado | Evidencia |
+|---|---|---|
+| Los 6 casos de prueba pasan y quedan documentados | ✅ | `docs/RAG.md` |
+| Sin `HUGGINGFACEHUB_API_TOKEN`, el resto de la app funciona normal; chat/búsqueda IA devuelven error controlado inline | ✅ | Verificado en 4.3 (endpoint `reindex` → 500 + warn) y 4.7 (chat → mensaje inline, resto de la app intacto) |
+| Anónimo: catálogo y búsqueda exacta intactos; pestaña IA, `/asistente` y `/soporte` piden sesión | ✅ | Verificado para pestaña IA y `/asistente`; `/soporte` comparte la misma entrada del middleware, no se verificó por separado |
+| `grep -rln "@huggingface" ... \| grep -v lib/ai` → vacío | ✅ | Confirmado en cada fase y al cierre |
+| `grep -rl "lib/supabase/admin" app components hooks services \| grep -v api/v1` → vacío | ✅ | Solo coincide un comentario en `embedding.service.ts`, no un import |
+| `npm run lint`, `type-check` y `build` pasan | ✅ | Confirmado al cierre de cada fase y al final |
+
+### (b) Deuda técnica y limitaciones conocidas (vigentes en el código actual)
+
+- **`components/shared/AIChatbot.tsx` (el FAB de la Fase 3.9) sigue sin
+  conectar** al RAG real: la spec de la sesión 4 optó por páginas dedicadas
+  (`/asistente`, `/soporte`) en vez de cablear ese widget. Sigue mostrando
+  su eco fijo ("esa parte llega en la próxima sesión") y convive en la UI
+  con los links reales del menú — dos entradas de "IA" distintas, una
+  falsa. Candidato a eliminar o conectar en la próxima sesión.
+- **`seed.sql` no crea filas en `auth.identities`:** ningún usuario del seed
+  puede iniciar sesión por password contra GoTrue v2.196.0 sin el parche de
+  runtime aplicado en la Fase 4.7 (no persiste tras `supabase db reset`).
+  Bug preexistente a esta sesión, no corregido porque `seed.sql` está fuera
+  de alcance.
+- **El seed real tiene 15 productos activos (no 14) y 2 tickets** (de
+  `buyer1` y `buyer2`, no `buyer3`): la spec de la sesión 4 se escribió
+  contra una versión distinta del seed. Base real usada en toda la sesión:
+  **25 fichas** (15 productos + 10 artículos), documentado en `docs/RAG.md`.
+- **El modo soporte no siempre sugiere "crear un ticket"** ante preguntas
+  sin respuesta (lo hizo en algunas repeticiones de la calibración, no en
+  todas) — problema de instrucciones del modelo
+  (`SUPPORT_SYSTEM_INSTRUCTIONS`), no de threshold.
+- **Fuera de alcance a propósito (restricciones de la sesión):** streaming
+  de respuestas, crear tickets desde el chat (solo listar), voz — todo
+  reservado para sesiones futuras.
+- Heredadas de sesión 3, sin cambios en esta sesión: nombres de otros
+  usuarios no legibles, cancelar pedido no repone stock, pedidos
+  multi-vendedor comparten estado, sin realtime, imágenes del seed no
+  existen en Storage.
+
+### (c) Pendientes para la sesión 5 y heredados
+
+**Heredado de sesiones 1–3:** sin pendientes reales identificados (ver
+bitácora de sesión 3 más abajo).
+
+**Para sesión 5:**
+- Decidir el destino de `components/shared/AIChatbot.tsx` (conectar o
+  eliminar).
+- Considerar arreglar `seed.sql` para que cree `auth.identities` (bug que
+  bloquea cualquier login por password en local).
+- Revisar si el modo soporte necesita reforzar la instrucción de "sugerir
+  ticket" en `lib/ai/prompts.ts`.
+
+---
+
 ## Sesión 3 — UI Inteligente y Frontend Multimodal (2026-08-28 a 2026-08-30)
 
 **Nota de alcance:** todo el trabajo de esta sesión terminó commiteado, un
