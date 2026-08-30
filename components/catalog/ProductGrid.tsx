@@ -6,7 +6,9 @@ import { LoadingState } from "@/components/shared/LoadingState"
 import type { ProductWithDetails } from "@/types/product"
 
 interface ProductGridProps {
-  products: ProductWithDetails[]
+  // similarity opcional: solo la trae la pestaña "Resultados con IA" de
+  // /buscar (Fase 4.4). El grid es el mismo para ambas pestañas.
+  products: (ProductWithDetails & { similarity?: number })[]
   loading?: boolean
   error?: string | null
   onRetry?: () => void
@@ -52,7 +54,7 @@ export function ProductGrid({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(230px,1fr))] sm:gap-4">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} similarity={product.similarity} />
       ))}
     </div>
   )

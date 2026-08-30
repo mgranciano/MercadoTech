@@ -7,9 +7,12 @@ import type { ProductWithDetails } from "@/types/product"
 
 interface ProductCardProps {
   product: ProductWithDetails
+  // Solo la pestaña "Resultados con IA" de /buscar la pasa (Fase 4.4): un
+  // prop opcional, no un card distinto.
+  similarity?: number
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, similarity }: ProductCardProps) {
   return (
     <Link
       href={`/producto/${product.id}`}
@@ -32,6 +35,11 @@ export function ProductCard({ product }: ProductCardProps) {
           condition={product.condition as "nuevo" | "usado" | "reacondicionado"}
           className="absolute left-2.5 top-2.5 shadow-sm"
         />
+        {similarity !== undefined && (
+          <span className="absolute right-2.5 top-2.5 rounded-full bg-background/90 px-2 py-0.5 text-[10px] font-semibold text-primary shadow-sm">
+            {Math.round(similarity * 100)}% relevante
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">
