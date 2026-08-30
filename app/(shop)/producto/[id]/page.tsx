@@ -1,11 +1,13 @@
 "use client"
 
+import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { useProduct } from "@/hooks/useProduct"
 import { useQuestions } from "@/hooks/useQuestions"
 import { useReviews } from "@/hooks/useReviews"
 import { useFavorite } from "@/hooks/useFavorite"
+import { useCart } from "@/hooks/useCart"
 import { ProductGallery } from "@/components/product/ProductGallery"
 import { ProductInfo } from "@/components/product/ProductInfo"
 import { BuyBox } from "@/components/product/BuyBox"
@@ -35,13 +37,31 @@ export default function ProductPage() {
     average,
     count,
     canReview,
+    loading: reviewsLoading,
     submitting: submittingReview,
     submit: submitReview,
   } = useReviews(productId, profile?.id)
   const { favorite, toggling, toggle: toggleFavorite } = useFavorite(productId, profile?.id)
+  const { add: addToCart } = useCart(profile?.id)
+  const [cartMessage, setCartMessage] = useState<{ type: "success" | "error"; text: string } | null>(
+    null
+  )
 
   const requireLogin = () => {
     router.push(`/login?redirectTo=/producto/${productId}`)
+  }
+
+  const handleAddToCart = async (quantity: number) => {
+    setCartMessage(null)
+    try {
+      await addToCart(productId, quantity)
+      setCartMessage({ type: "success", text: "Producto agregado al carrito." })
+    } catch (err) {
+      setCartMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "No se pudo agregar al carrito.",
+      })
+    }
   }
 
   if (loading) {
@@ -82,12 +102,20 @@ export default function ProductPage() {
             hasSession={hasSession}
             favorite={favorite}
             favoriteLoading={toggling}
-            onAddToCart={() => {
-              // "Agregar al carrito" se implementa en la Fase 3.6.
-            }}
+            onAddToCart={handleAddToCart}
             onToggleFavorite={toggleFavorite}
             onRequireLogin={requireLogin}
           />
+
+          {cartMessage && (
+            <p
+              className={
+                cartMessage.type === "success" ? "text-sm text-success" : "text-sm text-destructive"
+              }
+            >
+              {cartMessage.text}
+            </p>
+          )}
         </div>
       </div>
 
@@ -112,6 +140,7 @@ export default function ProductPage() {
         count={count}
         canReview={canReview.allowed}
         hasSession={hasSession}
+        loading={reviewsLoading}
         submitting={submittingReview}
         onSubmit={(rating, comment) => submitReview(rating, comment)}
         onRequireLogin={requireLogin}
