@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { AuthTabs } from "@/components/auth/AuthTabs"
 import { LoginForm } from "@/components/auth/LoginForm"
 import { login } from "@/services/auth.service"
 import type { LoginInput } from "@/lib/validators/auth"
@@ -28,10 +29,14 @@ function LoginPageContent() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-center mb-6">Ingresar a MercadoTech</h1>
+    <>
+      <AuthTabs active="login" />
+      <h1 className="mb-1.5 text-[25px] font-extrabold tracking-tighter">Bienvenido de vuelta</h1>
+      <p className="mb-6 text-sm text-muted-foreground">
+        Ingresa para ver tus pedidos, favoritos y recomendaciones.
+      </p>
       <LoginForm onSubmit={handleSubmit} loading={loading} error={error} />
-    </div>
+    </>
   )
 }
 

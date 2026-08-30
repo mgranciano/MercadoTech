@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { AuthTabs } from "@/components/auth/AuthTabs"
 import { RegisterForm } from "@/components/auth/RegisterForm"
 import { register } from "@/services/auth.service"
 import type { RegisterInput } from "@/lib/validators/auth"
@@ -28,10 +29,14 @@ function RegisterPageContent() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-center mb-6">Crear cuenta en MercadoTech</h1>
+    <>
+      <AuthTabs active="register" />
+      <h1 className="mb-1.5 text-[25px] font-extrabold tracking-tighter">Crea tu cuenta</h1>
+      <p className="mb-6 text-sm text-muted-foreground">
+        Dos minutos y empiezas a comprar o vender con MercadoTech.
+      </p>
       <RegisterForm onSubmit={handleSubmit} loading={loading} error={error} />
-    </div>
+    </>
   )
 }
 

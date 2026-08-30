@@ -22,6 +22,8 @@ const config: Config = {
         "muted-foreground": "hsl(var(--muted-foreground))",
         accent: "hsl(var(--accent))",
         "accent-foreground": "hsl(var(--accent-foreground))",
+        "ai-cyan": "hsl(var(--ai-cyan))",
+        "ai-cyan-foreground": "hsl(var(--ai-cyan-foreground))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

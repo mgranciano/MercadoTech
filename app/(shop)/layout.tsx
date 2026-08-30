@@ -3,18 +3,21 @@
 import { ReactNode, Suspense } from "react"
 import { Navbar } from "@/components/layout/Navbar"
 import { Container } from "@/components/shared/Container"
+import { AIChatbot } from "@/components/shared/AIChatbot"
 import { useAuth } from "@/hooks/useAuth"
 import { useCategories } from "@/hooks/useCategories"
+import { useCart } from "@/hooks/useCart"
 
 function ShopNavbar() {
   const { user, profile, logout } = useAuth()
   const { categories } = useCategories()
+  const { count } = useCart(profile?.id)
 
   return (
     <Navbar
       categories={categories}
-      cartCount={0}
-      user={user}
+      cartCount={count}
+      user={user ? { email: user.email, display_name: profile?.display_name ?? undefined } : null}
       role={profile?.role}
       onLogout={logout}
     />
@@ -43,6 +46,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
           </div>
         </Container>
       </footer>
+      <AIChatbot />
     </>
   )
 }

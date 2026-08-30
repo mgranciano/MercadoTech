@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Material de referencia, no código de la app (p. ej. mockups pegados
+    // como .tsx para poder leerlos, nunca importados por nada).
+    "docs/**",
   ]),
 ]);
 

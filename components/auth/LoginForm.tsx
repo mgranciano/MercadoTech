@@ -1,8 +1,9 @@
 "use client"
 
 import { FormEvent, useState } from "react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { validateLogin, type LoginInput } from "@/lib/validators/auth"
 
 interface LoginFormProps {
@@ -40,59 +41,58 @@ export function LoginForm({ onSubmit, loading = false, error }: LoginFormProps) 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 w-full">
+    <form onSubmit={handleSubmit} className="w-full space-y-4">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-1">
-          Email
-        </label>
-        <input
+        <Label htmlFor="email" className="mb-1.5 block text-xs font-bold">
+          Correo electrónico
+        </Label>
+        <Input
           id="email"
           type="email"
+          placeholder="tu@correo.com"
           value={formData.email}
           onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-          className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           disabled={loading}
+          className="h-12 rounded-xl"
         />
         {validationErrors.email && (
-          <p className="text-xs text-destructive mt-1">{validationErrors.email}</p>
+          <p className="mt-1 text-xs text-destructive">{validationErrors.email}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium mb-1">
+        <Label htmlFor="password" className="mb-1.5 block text-xs font-bold">
           Contraseña
-        </label>
-        <input
+        </Label>
+        <Input
           id="password"
           type="password"
+          placeholder="••••••••"
           value={formData.password}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, password: e.target.value }))
           }
-          className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           disabled={loading}
+          className="h-12 rounded-xl"
         />
         {validationErrors.password && (
-          <p className="text-xs text-destructive mt-1">{validationErrors.password}</p>
+          <p className="mt-1 text-xs text-destructive">{validationErrors.password}</p>
         )}
       </div>
 
       {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive text-destructive text-sm rounded-md">
+        <div className="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Ingresando..." : "Ingresar"}
+      <Button
+        type="submit"
+        disabled={loading}
+        className="h-[50px] w-full rounded-xl bg-gradient-to-r from-ai-cyan via-primary to-accent text-base font-extrabold text-white shadow-[0_10px_26px_rgba(11,79,214,.3)] transition hover:-translate-y-0.5"
+      >
+        {loading ? "Ingresando..." : "Iniciar sesión"}
       </Button>
-
-      <p className="text-sm text-center text-muted-foreground">
-        ¿No tienes cuenta?{" "}
-        <Link href="/register" className="text-primary font-semibold hover:underline">
-          Crear cuenta
-        </Link>
-      </p>
     </form>
   )
 }

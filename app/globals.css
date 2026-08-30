@@ -1,32 +1,53 @@
 @import "tailwindcss";
+@config "../tailwind.config.ts";
 
+/*
+ * Paleta extraída de docs/mockup-referencia.tsx (MercadoTechApp):
+ *   - Azul corporativo:      #0b4fd6  → primary
+ *   - Acento cian (IA):      #22d3ee  → ai-cyan (nuevo; el mockup usa un
+ *     gradiente de dos tonos cian→morado para todo lo relacionado a IA,
+ *     así que se agrega esta variable en vez de perder uno de los dos)
+ *   - Acento morado neón (IA): #7b2ff7 → accent
+ *   - Fondo de página:      #eef1f7  → background
+ *   - Texto principal:      #0b1220  → foreground
+ *   - Bordes / inputs:      #dde3ee  → border / input
+ *   - Texto secundario:     #7b8399  → muted-foreground
+ * El mockup no define un modo oscuro explícito (no usa `dark:`), así que
+ * los tokens oscuros se derivan de sus propias secciones oscuras (hero,
+ * sidebar del vendedor: #07173d, #0a1330) manteniendo el mismo matiz de
+ * marca (~220°) en vez del gris neutro anterior.
+ * success/warning/destructive quedan sin tocar (fuera del alcance pedido).
+ */
 :root {
   /* Light theme */
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.6%;
+  --background: 220 36% 95%;
+  --foreground: 220 49% 8%;
 
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 3.6%;
+  --card-foreground: 220 49% 8%;
 
-  --primary: 262 80% 50%;
+  --primary: 220 90% 44%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 0 0% 96.1%;
-  --secondary-foreground: 0 0% 9%;
+  --secondary: 220 45% 95%;
+  --secondary-foreground: 220 49% 8%;
 
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
+  --muted: 220 47% 97%;
+  --muted-foreground: 224 13% 54%;
 
-  --accent: 0 84.3% 60.2%;
+  --accent: 263 93% 58%;
   --accent-foreground: 0 0% 100%;
+
+  --ai-cyan: 188 86% 53%;
+  --ai-cyan-foreground: 203 82% 13%;
 
   --destructive: 0 84.3% 60.2%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 262 80% 50%;
-  --ring-offset: 0 0% 100%;
+  --border: 219 33% 90%;
+  --input: 219 33% 90%;
+  --ring: 188 86% 53%;
+  --ring-offset: 220 36% 95%;
 
   --success: 142.3 70.6% 45.3%;
   --success-foreground: 0 0% 100%;
@@ -42,31 +63,34 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 0 0% 3.6%;
-    --foreground: 0 0% 98%;
+    --background: 224 70% 11%;
+    --foreground: 221 70% 95%;
 
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
+    --card: 225 45% 15%;
+    --card-foreground: 221 70% 95%;
 
-    --primary: 262 80% 50%;
+    --primary: 220 90% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 225 40% 20%;
+    --secondary-foreground: 221 70% 95%;
 
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted: 225 40% 18%;
+    --muted-foreground: 222 29% 67%;
 
-    --accent: 0 84.3% 60.2%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 263 93% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    --ai-cyan: 188 86% 58%;
+    --ai-cyan-foreground: 203 82% 13%;
 
     --destructive: 0 84.3% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 262 80% 50%;
-    --ring-offset: 0 0% 3.6%;
+    --border: 225 35% 22%;
+    --input: 225 35% 22%;
+    --ring: 188 86% 58%;
+    --ring-offset: 224 70% 11%;
 
     --success: 142.3 70.6% 45.3%;
     --success-foreground: 0 0% 100%;

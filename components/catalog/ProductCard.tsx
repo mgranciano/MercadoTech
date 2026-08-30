@@ -3,7 +3,7 @@ import { ProductImage } from "@/components/shared/ProductImage"
 import { Price } from "@/components/shared/Price"
 import { ConditionBadge } from "@/components/shared/ConditionBadge"
 import { RatingStars } from "@/components/shared/RatingStars"
-import type { ProductWithDetails } from "@/services/product.service"
+import type { ProductWithDetails } from "@/types/product"
 
 interface ProductCardProps {
   product: ProductWithDetails
@@ -13,48 +13,45 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/producto/${product.id}`}
-      className="group flex flex-col rounded-lg border border-border overflow-hidden hover:shadow-lg transition-shadow"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition duration-200 hover:-translate-y-1 hover:border-ai-cyan hover:shadow-[0_16px_34px_rgba(12,26,56,.14)]"
     >
-      <div className="relative w-full aspect-square bg-muted overflow-hidden">
+      <div className="relative h-[170px] w-full overflow-hidden bg-muted">
         {product.image_url ? (
           <ProductImage
             src={product.image_url}
             alt={product.title}
             fill
-            className="group-hover:scale-105 transition-transform duration-300"
+            className="transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
+          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
             Sin imagen
           </div>
         )}
+        <ConditionBadge
+          condition={product.condition as "nuevo" | "usado" | "reacondicionado"}
+          className="absolute left-2.5 top-2.5 shadow-sm"
+        />
       </div>
 
-      <div className="flex-1 flex flex-col p-4">
-        <div className="mb-2">
-          <ConditionBadge
-            condition={product.condition as "nuevo" | "usado" | "reacondicionado"}
-            className="text-xs"
-          />
-        </div>
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <span className="font-mono text-[9.5px] uppercase tracking-[.12em] text-muted-foreground">
+          {product.brand}
+        </span>
 
-        <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors mb-1">
+        <h3 className="text-pretty text-[14.5px] font-bold leading-snug tracking-tight line-clamp-2 transition-colors group-hover:text-primary">
           {product.title}
         </h3>
 
-        <p className="text-xs text-muted-foreground mb-2">{product.brand}</p>
-
         {product.review_count > 0 && (
-          <div className="flex items-center gap-2 mb-auto">
-            <RatingStars rating={product.average_rating} size={14} />
-            <span className="text-xs text-muted-foreground">
-              ({product.review_count})
-            </span>
+          <div className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+            <RatingStars rating={product.average_rating} size={13} />
+            <span>({product.review_count})</span>
           </div>
         )}
 
-        <div className="mt-3 pt-3 border-t border-border">
-          <Price value={product.price} className="text-lg font-bold text-primary" />
+        <div className="mt-auto border-t border-border pt-3">
+          <Price value={product.price} className="text-xl font-extrabold tracking-tight" />
         </div>
       </div>
     </Link>
