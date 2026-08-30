@@ -10,6 +10,7 @@ import {
 } from "@/services/seller.service"
 import { getProductImages } from "@/services/product.service"
 import { deleteProductImage, getPublicUrl, saveImageOrder, uploadProductImage } from "@/services/storage.service"
+import { triggerReindex } from "@/services/indexing-trigger.service"
 import { validateProduct, type ProductFormValues } from "@/lib/validators/product"
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, MAX_IMAGES_PER_PRODUCT } from "@/lib/constants/product"
 import type { ProductInput } from "@/types/seller"
@@ -263,9 +264,11 @@ export function useProductForm({ mode, sellerId, productId }: UseProductFormOpti
           await addProductImage(product.id, path, i)
         }
 
+        triggerReindex("producto", product.id)
         router.push("/vendedor/productos")
       } else if (productId) {
         await updateProduct(productId, input)
+        triggerReindex("producto", productId)
         router.push("/vendedor/productos")
       }
     } catch (err) {

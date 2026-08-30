@@ -79,3 +79,22 @@ export async function indexSupportArticle(supabase: AdminClient, articleId: stri
     title: article.title,
   })
 }
+
+// Contraparte de index*: borra la ficha de una fuente que ya no existe
+// (producto/artículo borrado). source_id no tiene FK dura (decisión 6,
+// migración 0027) — esta es la limpieza explícita que evita que quede
+// huérfana para siempre. La llama el Route Handler de reindex (Fase 4.3)
+// cuando comprueba que la fuente ya no está.
+export async function removeEmbedding(
+  supabase: AdminClient,
+  sourceType: EmbeddingSourceType,
+  sourceId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("knowledge_embeddings")
+    .delete()
+    .eq("source_type", sourceType)
+    .eq("source_id", sourceId)
+
+  if (error) throw error
+}

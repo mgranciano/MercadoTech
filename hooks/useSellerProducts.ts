@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { deleteProduct, listMyProducts, toggleActive } from "@/services/seller.service"
+import { triggerReindex } from "@/services/indexing-trigger.service"
 import type { SellerProduct } from "@/types/seller"
 
 export function useSellerProducts(sellerId?: string) {
@@ -52,6 +53,7 @@ export function useSellerProducts(sellerId?: string) {
 
     try {
       await toggleActive(productId, isActive)
+      triggerReindex("producto", productId)
     } catch (err) {
       setProducts(previous)
       throw err
@@ -64,6 +66,9 @@ export function useSellerProducts(sellerId?: string) {
 
     try {
       await deleteProduct(productId)
+      // El producto ya no existe: el endpoint de reindex lo detecta y limpia
+      // su ficha huérfana (decisión 6).
+      triggerReindex("producto", productId)
     } catch (err) {
       setProducts(previous)
       throw err
