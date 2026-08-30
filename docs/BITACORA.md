@@ -9,11 +9,12 @@ Documenta lo **construido**, no el plan — donde el código difiere de la spec
 
 ## Sesión 3 — UI Inteligente y Frontend Multimodal (2026-08-28 a 2026-08-30)
 
-**Nota de alcance:** al escribir esta bitácora, solo el commit `774a690`
-(Fases 3.1–3.5) está en el historial de `mercadotech/`. El trabajo de las
-Fases 3.6–3.9 y este mismo cierre existen en el árbol de trabajo pero
-**no estaban commiteados** — se documentan igual porque están construidos y
-verificados, y se marcan explícitamente como pendientes de commit.
+**Nota de alcance:** todo el trabajo de esta sesión terminó commiteado, un
+commit por fase (más dos commits pequeños de continuación donde el staging
+inicial dejó archivos fuera por error — ver Fase 3.6 y 3.7). Al escribir la
+primera versión de esta bitácora, solo `774a690` (Fases 3.1–3.5) existía en
+el historial; las Fases 3.6–3.9 se commitearon después, al dividir el
+trabajo pendiente por fase.
 
 ### Fase 3.0 — Provisión del entorno (2026-08-28, commit `16816d1`)
 
@@ -55,20 +56,33 @@ alcance explícito).
 **Fuera de alcance:** confirmación de email por correo real (Supabase Auth
 hosted lo simula), recuperación de contraseña.
 
-### Fase 3.6 — Carrito, checkout y mis pedidos (2026-08-29, sin commit)
+### Fase 3.6 — Carrito, checkout y mis pedidos (2026-08-29, commits `9707fed`, `e7c2825`)
 
 **Construido:** `cart.service.ts`, `order.service.ts`, `useCart.ts`,
 `useOrders.ts`, `/carrito`, `/pedidos`, `/pedidos/[id]`, checkout vía RPC
-`create_order_from_cart` (Fase 2.2), cancelación de pedidos `pendiente`.
+`create_order_from_cart` (Fase 2.2), cancelación de pedidos `pendiente`,
+"Agregar al carrito" conectado en el detalle de producto (`e7c2825`, quedó
+fuera del primer commit por un descuido de staging).
 
 **Problema encontrado:** cancelar un pedido no restaura el stock — no existe
 trigger para eso. Es la limitación #11 de la spec, documentada en la UI
 ("no se repone stock automáticamente"), no resuelta (fuera de alcance).
 
+**Migraciones nuevas** (bugs de RLS nunca antes ejercidos, existentes desde
+la Fase 2.3):
+- `0022_fix_orders_buyer_cancel_check.sql` — el `WITH CHECK` de
+  `orders_update_policy` exigía que el pedido cancelado siguiera en
+  `pendiente`, lo que hacía imposible la propia cancelación que la política
+  dice permitir.
+- `0023_fix_cart_items_update_using.sql` — `cart_items_update_policy` solo
+  tenía `WITH CHECK`, sin `USING`: sin `USING` un `UPDATE` no encuentra
+  filas que actualizar (falla silenciosa, "UPDATE 0"), rompía cambiar
+  cantidades en el carrito.
+
 **Fuera de alcance:** pasarela de pago real (no existe en ningún momento del
 proyecto), reposición automática de stock al cancelar.
 
-### Fase 3.7 — Panel del vendedor con drag & drop (2026-08-29, sin commit)
+### Fase 3.7 — Panel del vendedor con drag & drop (2026-08-29, commits `f78f774`, `4aa6fd9`)
 
 **Construido:** `seller.service.ts`, `useSellerProducts.ts`,
 `useSellerOrders.ts`, CRUD de productos (`/vendedor/productos`,
@@ -94,10 +108,22 @@ ventas (`order_items.product_id` es `on delete restrict`). Se muestra un
 error claro sugiriendo desactivar el producto en vez de borrarlo (decisión
 #10 de la spec).
 
-**Migración nueva:** `0022_fix_orders_buyer_cancel_check.sql` (el `CHECK` de
-cancelación por comprador rechazaba casos válidos).
+**Migraciones nuevas** (mismo tipo de bug de RLS nunca antes ejercido,
+descubierto al construir esta fase; el segundo commit `4aa6fd9` las agrega
+por un descuido de staging del primero):
+- `0024_fix_products_update_using.sql` — `products_update_policy` y
+  `product_images_update_policy` con el mismo bug que `0023` (solo
+  `WITH CHECK`, sin `USING`) — bloqueaba `updateProduct`, `toggleActive` y
+  el reorden de galería.
+- `0025_restrict_seller_order_status_values.sql` — refuerza en RLS la
+  decisión 9: restringe a qué estados puede mover un pedido el vendedor.
 
-### Fase 3.8 — Responsive, accesibilidad y estados (2026-08-29, sin commit)
+**Nota:** `OrdersKanban.tsx` y `OrderKanbanCard.tsx` se commitearon en esta
+fase ya con el restyle visual de la Fase 3.9 (mockup de referencia) —
+son archivos nuevos sin commit intermedio contra el que separar los
+cambios por fase.
+
+### Fase 3.8 — Responsive, accesibilidad y estados (2026-08-29, commit `13cfe75`)
 
 **Construido:** pasada de calidad sobre las 14 pantallas del mapa de rutas,
 documentada en `docs/SESION3_CHECKLIST.md`. No agrega funcionalidad; cierra
@@ -131,20 +157,13 @@ directo para `onAuthStateChange`; se envolvió en
   (scaffold de la Fase 2.1, vacíos salvo `.gitkeep`, nunca borrados tras
   adoptar route groups en 3.2).
 
-**Migraciones nuevas:** `0023_fix_cart_items_update_using.sql`,
-`0024_fix_products_update_using.sql` (a ambas policies de `UPDATE` les
-faltaba la cláusula `USING`, solo tenían `WITH CHECK` — un `UPDATE` sin fila
-que calce `USING` no filtra nada y puede tocar filas ajenas),
-`0025_restrict_seller_order_status_values.sql` (reforzar en RLS la decisión
-#9: el vendedor no puede escribir `cancelado`).
-
 **Verificación de capas al cerrar la fase** (ambas vacías):
 ```bash
 grep -rl "@/lib/supabase" components hooks
 grep -rl "from \"@/services" components
 ```
 
-### Fase 3.9 — Refactor visual con mockup de referencia (2026-08-29/30, sin commit, fuera del plan original)
+### Fase 3.9 — Refactor visual con mockup de referencia (2026-08-29/30, commit `4fe33b0`, fuera del plan original)
 
 **Desviación de alcance:** no existe en `MercadoTech_sesion3.md`. El usuario
 pidió, en cuatro prompts independientes posteriores a la Fase 3.8, aplicar
@@ -166,6 +185,7 @@ la UI ya funcional, sin tocar lógica. Se ejecutó en este orden:
 4. **Kanban del vendedor** — `OrdersKanban.tsx`, `OrderKanbanCard.tsx`,
    adaptación a mobile con accesos rápidos por columna (`scrollTo`, sin
    desmontar columnas, para no romper el drop entre ellas de `@dnd-kit`).
+   Commiteado en `f78f774` (Fase 3.7), no aquí — ver nota en esa fase.
 5. **`components/shared/AIChatbot.tsx`** (nuevo) — FAB + ventana de chat
    extraídos del mockup, montado en `app/(shop)/layout.tsx`. **Solo UI**: sin
    llamadas a API ni lógica RAG. Al enviar un mensaje se hace eco visual y se
@@ -190,9 +210,11 @@ no solo en las pantallas tocadas. Se corrigió agregando la directiva.
 **Fuera de alcance (correcto, no es una fase por hacer):** `FiltersPanel.tsx`
 no se tocó — no estaba en el pedido de ninguno de los cuatro prompts.
 
-### Cierre — Bitácora y actualización de CLAUDE.md (2026-08-30)
+### Cierre — Bitácora y actualización de CLAUDE.md (2026-08-30, commit `5611cf3`)
 
 Este mismo documento y el diff quirúrgico de `CLAUDE.md` que lo acompaña.
+Commiteado antes de dividir el resto del trabajo pendiente (Fases 3.6–3.9)
+por fase; esta es la revisión actualizada tras esa división.
 
 ---
 
@@ -224,10 +246,6 @@ Este mismo documento y el diff quirúrgico de `CLAUDE.md` que lo acompaña.
 - **`AIChatbot` es solo UI**: sin conexión a RAG/API (ver Fase 3.9).
 - **Imágenes del seed no existen en Storage**: `ProductImage` cae a
   placeholder ante el 404 (comportamiento esperado, decisión #13).
-- **87 archivos modificados/nuevos sin commit** al momento de escribir esta
-  bitácora (Fases 3.6 a 3.9). El commit de cierre de esta sesión solo cubre
-  `docs/BITACORA.md` y `CLAUDE.md`; el resto queda pendiente de decisión del
-  usuario sobre cómo dividir el commit del código.
 
 ### (c) Pendientes para la sesión 4 y heredados de sesiones anteriores
 
@@ -245,8 +263,6 @@ el scaffold. No hay pendiente identificable.
 restricciones de esta sesión):
 - Conectar `components/shared/AIChatbot.tsx` a RAG real (embeddings,
   `pgvector` ya habilitado desde la Fase 2.2, base de conocimiento).
-- Commitear el trabajo de las Fases 3.6–3.9 (pendiente de decisión del
-  usuario sobre cómo dividirlo).
 - Considerar la vista `public_profiles` si se decide mostrar nombres reales.
 - Trigger de reposición de stock al cancelar, si se decide resolver la
   limitación.

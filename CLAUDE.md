@@ -192,9 +192,8 @@ La Fase 2.1 implementó:
 
 - **Sesión 1:** no se ejecutó como sesión independiente (ver `docs/BITACORA.md`).
 - **Sesión 2:** completa, incluidas las Fases 2.6 y 2.7 (commits `88b0681`, `8a472ee`).
-- **Sesión 3:** Fases 3.1–3.9 construidas y verificadas; solo 3.1–3.5 y el
-  provisioning están commiteados (`774a690`, `16816d1`). El resto (3.6–3.9)
-  está en el árbol de trabajo, pendiente de commit.
+- **Sesión 3:** Fases 3.1–3.9 construidas, verificadas y commiteadas (una
+  fase por commit; ver `docs/BITACORA.md` para los hashes).
 - **Sesión 4 en adelante:** RAG real para `components/shared/AIChatbot.tsx`
   (UI-only por ahora), voz, `app/api/v1/`.
 - Detalle completo: `docs/BITACORA.md` (bitácora acumulativa) y
