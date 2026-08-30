@@ -1,7 +1,5 @@
 import { createClient } from "@/lib/supabase/client"
-import type { Database } from "@/types/database"
-
-export type Category = Database["public"]["Tables"]["categories"]["Row"]
+import type { Category } from "@/types/category"
 
 export async function listCategories(): Promise<Category[]> {
   const supabase = createClient()

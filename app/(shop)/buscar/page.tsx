@@ -9,7 +9,7 @@ import { useProducts } from "@/hooks/useProducts"
 import { PRODUCTS_PAGE_SIZE } from "@/lib/constants/catalog"
 
 function SearchPageContent({ query }: { query: string }) {
-  const { items, total, page, loading, error, setFilter, setPage } =
+  const { items, total, page, loading, error, setFilter, setPage, retry } =
     useProducts()
 
   return (
@@ -33,7 +33,7 @@ function SearchPageContent({ query }: { query: string }) {
 
         {/* Products */}
         <div className="lg:col-span-3 space-y-6">
-          <ProductGrid products={items} loading={loading} error={error} />
+          <ProductGrid products={items} loading={loading} error={error} onRetry={retry} />
 
           {total > PRODUCTS_PAGE_SIZE && (
             <Pagination

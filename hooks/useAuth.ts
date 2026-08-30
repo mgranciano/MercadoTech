@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import {
   logout,
   getCurrentUser,
-  type User,
-  type Profile,
+  subscribeToAuthChanges,
 } from "@/services/auth.service"
+import type { User, Profile } from "@/types/user"
 
 interface AuthState {
   user: User | null
@@ -29,57 +28,52 @@ export function useAuth() {
   })
 
   useEffect(() => {
-    let unsubscribe: (() => void) | null = null
+    let active = true
 
     const initializeAuth = async () => {
       try {
-        const supabase = createClient()
-
-        // Get current user on mount
         const user = await getCurrentUser()
+        if (!active) return
         setState((prev) => ({
           ...prev,
           user,
           profile: user?.profile || null,
           initializing: false,
         }))
-
-        // Subscribe to auth state changes
-        const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-          if (session?.user) {
-            const updatedUser = await getCurrentUser()
-            setState((prev) => ({
-              ...prev,
-              user: updatedUser,
-              profile: updatedUser?.profile || null,
-              error: null,
-            }))
-          } else {
-            setState((prev) => ({
-              ...prev,
-              user: null,
-              profile: null,
-              error: null,
-            }))
-          }
-        })
-
-        unsubscribe = data?.subscription?.unsubscribe
       } catch (error) {
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Error initializing auth",
-          initializing: false,
-        }))
+        if (active) {
+          setState((prev) => ({
+            ...prev,
+            error: error instanceof Error ? error.message : "Error initializing auth",
+            initializing: false,
+          }))
+        }
       }
     }
 
     initializeAuth()
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe()
+    const unsubscribe = subscribeToAuthChanges(async (hasSession) => {
+      if (!active) return
+
+      if (hasSession) {
+        const updatedUser = await getCurrentUser()
+        if (active) {
+          setState((prev) => ({
+            ...prev,
+            user: updatedUser,
+            profile: updatedUser?.profile || null,
+            error: null,
+          }))
+        }
+      } else {
+        setState((prev) => ({ ...prev, user: null, profile: null, error: null }))
       }
+    })
+
+    return () => {
+      active = false
+      unsubscribe()
     }
   }, [])
 

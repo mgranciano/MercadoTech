@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { listCategories, type Category } from "@/services/category.service"
+import { listCategories } from "@/services/category.service"
+import type { Category } from "@/types/category"
 
 let cachedCategories: Category[] | null = null
 

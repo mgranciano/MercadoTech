@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import {
-  listActiveProducts,
-  type ProductWithDetails,
-} from "@/services/product.service"
+import { listActiveProducts } from "@/services/product.service"
 import { PRODUCTS_PAGE_SIZE } from "@/lib/constants/catalog"
+import type { ProductWithDetails } from "@/types/product"
 
 interface Filters {
   search?: string
@@ -28,6 +26,7 @@ export function useProducts(options: UseProductsOptions = {}) {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const page = Number(searchParams.get("page")) || options.initialPage || 1
   const search = searchParams.get("q") || undefined
@@ -73,7 +72,7 @@ export function useProducts(options: UseProductsOptions = {}) {
     }
 
     fetchProducts()
-  }, [options.categoryId, search, condition, minPrice, maxPrice, sort, page])
+  }, [options.categoryId, search, condition, minPrice, maxPrice, sort, page, refreshKey])
 
   const setFilter = (newFilters: Partial<Filters>) => {
     const params = new URLSearchParams(searchParams)
@@ -130,10 +129,7 @@ export function useProducts(options: UseProductsOptions = {}) {
     router.push(`?${params.toString()}`)
   }
 
-  const retry = () => {
-    // Trigger refetch by updating a dependency
-    setLoading(true)
-  }
+  const retry = () => setRefreshKey((k) => k + 1)
 
   return {
     items,

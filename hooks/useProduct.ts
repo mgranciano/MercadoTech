@@ -1,13 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import {
-  getProductById,
-  getProductImages,
-  registerView,
-  type ProductImageWithUrl,
-  type ProductWithDetails,
-} from "@/services/product.service"
+import { getProductById, getProductImages, registerView } from "@/services/product.service"
+import type { ProductImageWithUrl, ProductWithDetails } from "@/types/product"
 
 export function useProduct(productId: string, userId?: string) {
   const [product, setProduct] = useState<ProductWithDetails | null>(null)

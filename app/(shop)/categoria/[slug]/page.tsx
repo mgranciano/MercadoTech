@@ -4,8 +4,11 @@ import { Suspense, useEffect, useState } from "react"
 import { ProductGrid } from "@/components/catalog/ProductGrid"
 import { FiltersPanel } from "@/components/catalog/FiltersPanel"
 import { Pagination } from "@/components/catalog/Pagination"
+import { LoadingState } from "@/components/shared/LoadingState"
+import { ErrorState } from "@/components/shared/ErrorState"
 import { useProducts } from "@/hooks/useProducts"
-import { getCategoryBySlug, type Category } from "@/services/category.service"
+import { getCategoryBySlug } from "@/services/category.service"
+import type { Category } from "@/types/category"
 import { PRODUCTS_PAGE_SIZE } from "@/lib/constants/catalog"
 
 interface CategoryPageProps {
@@ -15,26 +18,47 @@ interface CategoryPageProps {
 function CategoryContent({ slug }: { slug: string }) {
   const [category, setCategory] = useState<Category | null>(null)
   const [loadingCategory, setLoadingCategory] = useState(true)
+  const [categoryError, setCategoryError] = useState(false)
+  const [categoryRefreshKey, setCategoryRefreshKey] = useState(0)
 
   useEffect(() => {
+    let active = true
+
     const fetchCategory = async () => {
+      setLoadingCategory(true)
+      setCategoryError(false)
+
       const cat = await getCategoryBySlug(slug)
+      if (!active) return
+
+      if (!cat) setCategoryError(true)
       setCategory(cat)
       setLoadingCategory(false)
     }
 
     void fetchCategory()
-  }, [slug])
 
-  const { items, total, page, loading, error, setFilter, setPage } =
+    return () => {
+      active = false
+    }
+  }, [slug, categoryRefreshKey])
+
+  const { items, total, page, loading, error, setFilter, setPage, retry } =
     useProducts({ categoryId: category?.id })
 
   if (loadingCategory) {
-    return <div className="text-center py-8">Cargando categoría...</div>
+    return <LoadingState variant="grid" count={8} className="py-8" />
   }
 
-  if (!category) {
-    return <div className="text-center py-8">Categoría no encontrada</div>
+  if (categoryError || !category) {
+    return (
+      <ErrorState
+        title="Categoría no encontrada"
+        description="No existe una categoría con esa URL."
+        onRetry={() => setCategoryRefreshKey((k) => k + 1)}
+        className="py-8"
+      />
+    )
   }
 
   const categoryName = category.name
@@ -58,7 +82,7 @@ function CategoryContent({ slug }: { slug: string }) {
 
         {/* Products */}
         <div className="lg:col-span-3 space-y-6">
-          <ProductGrid products={items} loading={loading} error={error} />
+          <ProductGrid products={items} loading={loading} error={error} onRetry={retry} />
 
           {total > PRODUCTS_PAGE_SIZE && (
             <Pagination

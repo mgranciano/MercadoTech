@@ -1,13 +1,6 @@
 import { createClient } from "@/lib/supabase/client"
 import type { RegisterInput } from "@/lib/validators/auth"
-import type { Database } from "@/types/database"
-
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
-
-export interface User {
-  email: string
-  profile?: Profile
-}
+import type { User } from "@/types/user"
 
 export async function register(input: RegisterInput) {
   const supabase = createClient()
@@ -94,4 +87,16 @@ export async function getAuthState() {
   } = await supabase.auth.getSession()
 
   return session
+}
+
+// Envuelve onAuthStateChange para que useAuth no importe el cliente
+// directamente (regla: solo services/ y app/ pueden importar @/lib/supabase).
+export function subscribeToAuthChanges(onChange: (hasSession: boolean) => void): () => void {
+  const supabase = createClient()
+
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    onChange(!!session?.user)
+  })
+
+  return () => data.subscription.unsubscribe()
 }

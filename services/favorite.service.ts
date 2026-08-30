@@ -1,8 +1,6 @@
 import { createClient } from "@/lib/supabase/client"
-import { mapProductToDetails, type ProductRow, type ProductWithDetails } from "@/services/product.service"
-import type { Database } from "@/types/database"
-
-export type Favorite = Database["public"]["Tables"]["favorites"]["Row"]
+import { mapProductToDetails } from "@/services/product.service"
+import type { ProductRow, ProductWithDetails } from "@/types/product"
 
 export async function isFavorite(productId: string, userId: string): Promise<boolean> {
   const supabase = createClient()

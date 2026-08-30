@@ -1,7 +1,5 @@
 import { createClient } from "@/lib/supabase/client"
-import type { Database } from "@/types/database"
-
-export type Question = Database["public"]["Tables"]["questions"]["Row"]
+import type { Question } from "@/types/question"
 
 export async function listByProduct(productId: string): Promise<Question[]> {
   const supabase = createClient()

@@ -1,26 +1,12 @@
 import { createClient } from "@/lib/supabase/client"
 import { getPublicUrl } from "@/services/storage.service"
-import type { Database } from "@/types/database"
+import type {
+  ProductImageWithUrl,
+  ProductRow,
+  ProductWithDetails,
+} from "@/types/product"
 
 const PRODUCT_IMAGES_BUCKET = "product-images"
-
-export type Product = Database["public"]["Tables"]["products"]["Row"]
-export type ProductImage = Database["public"]["Tables"]["product_images"]["Row"]
-
-export interface ProductRow extends Product {
-  product_images: Array<{ id: string; image_path: string; position: number }>
-  reviews: Array<{ id: string; rating: number }>
-}
-
-export interface ProductWithDetails extends Product {
-  image_url?: string
-  average_rating: number
-  review_count: number
-}
-
-export interface ProductImageWithUrl extends ProductImage {
-  image_url: string
-}
 
 // La imagen de portada y las miniaturas siempre exponen la URL pública ya
 // resuelta (nunca el path crudo de Storage): next/image la necesita completa.

@@ -5,7 +5,8 @@ import { Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { RatingStars } from "@/components/shared/RatingStars"
 import { EmptyState } from "@/components/shared/EmptyState"
-import type { Review } from "@/services/review.service"
+import { LoadingState } from "@/components/shared/LoadingState"
+import type { Review } from "@/types/review"
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("es-PE", {
@@ -21,6 +22,7 @@ interface ReviewsSectionProps {
   count: number
   canReview: boolean
   hasSession: boolean
+  loading: boolean
   submitting: boolean
   onSubmit: (rating: number, comment: string) => void
   onRequireLogin: () => void
@@ -32,6 +34,7 @@ export function ReviewsSection({
   count,
   canReview,
   hasSession,
+  loading,
   submitting,
   onSubmit,
   onRequireLogin,
@@ -83,7 +86,9 @@ export function ReviewsSection({
         </form>
       )}
 
-      {reviews.length === 0 ? (
+      {loading ? (
+        <LoadingState variant="list" count={2} />
+      ) : reviews.length === 0 ? (
         <EmptyState
           icon={<Star size={40} />}
           title="Sin reseñas todavía"

@@ -6,9 +6,8 @@ import {
   create,
   getAverage,
   listByProduct,
-  type CanReviewResult,
-  type Review,
 } from "@/services/review.service"
+import type { CanReviewResult, Review } from "@/types/review"
 
 const NO_REVIEW_ACCESS: CanReviewResult = { allowed: false, orderId: null }
 

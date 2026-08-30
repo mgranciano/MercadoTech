@@ -1,9 +1,11 @@
 "use client"
 
+import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { useFavorites } from "@/hooks/useFavorites"
 import { ProductGrid } from "@/components/catalog/ProductGrid"
 import { LoadingState } from "@/components/shared/LoadingState"
+import { Button } from "@/components/ui/button"
 
 export default function FavoritesPage() {
   const { profile, initializing } = useAuth()
@@ -20,16 +22,15 @@ export default function FavoritesPage() {
         products={items}
         loading={loading}
         error={error}
+        onRetry={retry}
         emptyTitle="Sin favoritos todavía"
         emptyDescription="Guarda los productos que te interesen para encontrarlos aquí."
+        emptyAction={
+          <Link href="/">
+            <Button variant="outline">Explorar productos</Button>
+          </Link>
+        }
       />
-      {error && (
-        <div className="mt-4 flex justify-center">
-          <button onClick={retry} className="text-sm text-primary underline">
-            Reintentar
-          </button>
-        </div>
-      )}
     </div>
   )
 }

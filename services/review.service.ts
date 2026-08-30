@@ -1,7 +1,5 @@
 import { createClient } from "@/lib/supabase/client"
-import type { Database } from "@/types/database"
-
-export type Review = Database["public"]["Tables"]["reviews"]["Row"]
+import type { CanReviewResult, CreateReviewInput, Review, ReviewAverage } from "@/types/review"
 
 interface OrderItemWithOrder {
   order_id: string
@@ -25,11 +23,6 @@ export async function listByProduct(productId: string): Promise<Review[]> {
   return data || []
 }
 
-export interface ReviewAverage {
-  average: number
-  count: number
-}
-
 export async function getAverage(productId: string): Promise<ReviewAverage> {
   const supabase = createClient()
 
@@ -48,11 +41,6 @@ export async function getAverage(productId: string): Promise<ReviewAverage> {
     average: Math.round((sum / data.length) * 10) / 10,
     count: data.length,
   }
-}
-
-export interface CanReviewResult {
-  allowed: boolean
-  orderId: string | null
 }
 
 // Reseña verificada: solo puede reseñar quien tiene un pedido 'entregado'
@@ -89,14 +77,6 @@ export async function canReview(productId: string, userId: string): Promise<CanR
   return eligible
     ? { allowed: true, orderId: eligible.order_id }
     : { allowed: false, orderId: null }
-}
-
-export interface CreateReviewInput {
-  productId: string
-  orderId: string
-  buyerId: string
-  rating: number
-  comment?: string
 }
 
 export async function create(input: CreateReviewInput): Promise<Review> {

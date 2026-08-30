@@ -1,12 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import {
-  answer,
-  create,
-  listByProduct,
-  type Question,
-} from "@/services/question.service"
+import { answer, create, listByProduct } from "@/services/question.service"
+import type { Question } from "@/types/question"
 
 export function useQuestions(productId: string) {
   const [questions, setQuestions] = useState<Question[]>([])

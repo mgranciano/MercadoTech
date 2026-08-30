@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { listMine } from "@/services/favorite.service"
-import type { ProductWithDetails } from "@/services/product.service"
+import type { ProductWithDetails } from "@/types/product"
 
 export function useFavorites(userId?: string) {
   const [items, setItems] = useState<ProductWithDetails[]>([])
