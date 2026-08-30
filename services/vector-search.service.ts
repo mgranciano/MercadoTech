@@ -53,22 +53,35 @@ export async function searchByEmbedding(
   return (data ?? []) as VectorMatch[]
 }
 
+// Embedding de la consulta + matching, SIN hidratar: la forma cruda que
+// devuelve match_knowledge (source_type, source_id, content, metadata,
+// similarity). La usa chat.service (Fase 4.6) para cualquier modo — el
+// contenido de knowledge_embeddings ya es texto listo para el LLM, no hace
+// falta ir a buscar la fila real como sí exige la UI de productos.
+export async function searchKnowledge(
+  query: string,
+  supabase: Client,
+  options: VectorSearchOptions = {}
+): Promise<VectorMatch[]> {
+  const embedding = await generateEmbedding(query)
+  return searchByEmbedding(embedding, supabase, options)
+}
+
 export interface ProductSearchResult extends ProductWithDetails {
   similarity: number
 }
 
-// Embedding de la consulta + matching (source_type='producto') + hidratación
-// contra products activos: precio e imagen SIEMPRE actuales (nunca lo que
-// quedó congelado en la ficha), descartando huérfanos (producto borrado o
-// desactivado desde que se indexó, decisión 6). Misma forma de hidratación
-// que product.service.mapProductToDetails.
+// searchKnowledge filtrada a productos + hidratación contra products
+// activos: precio e imagen SIEMPRE actuales (nunca lo que quedó congelado
+// en la ficha), descartando huérfanos (producto borrado o desactivado desde
+// que se indexó, decisión 6). Misma forma de hidratación que
+// product.service.mapProductToDetails.
 export async function searchProducts(
   query: string,
   supabase: Client,
   options: VectorSearchOptions = {}
 ): Promise<ProductSearchResult[]> {
-  const embedding = await generateEmbedding(query)
-  const matches = await searchByEmbedding(embedding, supabase, {
+  const matches = await searchKnowledge(query, supabase, {
     ...options,
     sourceType: "producto",
   })
