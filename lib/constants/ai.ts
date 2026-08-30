@@ -27,18 +27,31 @@ export const VECTOR_SEARCH_DEFAULT_TOP_K = 5
 // costo de Hugging Face ni el ruido de contexto.
 export const VECTOR_SEARCH_MAX_TOP_K = 20
 
-// Provisional (Guía HF, lección 7): pares de texto NO relacionados ya rondan
-// 0.1–0.2 de similitud (comparten idioma); los relacionados suelen superar
-// 0.4. Se parte de 0.3 y se calibra con datos reales en la Fase 4.8.
-export const VECTOR_SEARCH_DEFAULT_SIMILARITY_THRESHOLD = 0.3
+// Calibrado en la Fase 4.8 con 9 consultas reales contra los 25 documentos
+// del seed (docs/RAG.md, sección "Calibración"). El ruido entre pares NO
+// relacionados en este corpus llega hasta 0.43 (soporte) — más alto que el
+// 0.1–0.2 que ReadHub documentó (Guía HF, lección 7), probablemente porque
+// el catálogo es homogéneo (todo "tecnología", en español, vocabulario
+// compartido). Subir el umbral lo suficiente para cortar ESE ruido (~0.44)
+// también corta el caso insignia de la búsqueda semántica (audífonos
+// deportivos para "audífonos para el gimnasio", similitud 0.41) — no hay un
+// único número que separe limpio ambos casos. Se prioriza no perder
+// coincidencias reales sobre eliminar todo el ruido: 0.35 saca el ruido más
+// obvio de productos (ej. "Cisco Catalyst 9200" a 0.34 para "autos usados")
+// sin tocar ninguna coincidencia real observada (todas ≥0.40). El ruido de
+// soporte que sigue colando (~0.42-0.43) no rompe nada en la práctica: las
+// instrucciones del modo (lib/ai/prompts.ts) hacen que el modelo admita
+// igual que no tiene la información, aunque hasRelevantContext diga true.
+export const VECTOR_SEARCH_DEFAULT_SIMILARITY_THRESHOLD = 0.35
 
 // Cuántas fuentes, como máximo, entran al mensaje final tras filtrar y
 // ordenar por similitud (Fase 4.5).
 export const CONTEXT_BUILDER_DEFAULT_MAX_SOURCES = 5
 
-// Mismo umbral que la búsqueda: evita colar ruido al contexto aunque el
-// caller pida más fuentes de las que hay relevantes.
-export const CONTEXT_BUILDER_DEFAULT_MIN_SIMILARITY = 0.3
+// Mismo umbral que la búsqueda (calibrado en la Fase 4.8, ver
+// VECTOR_SEARCH_DEFAULT_SIMILARITY_THRESHOLD): evita colar ruido al
+// contexto aunque el caller pida más fuentes de las que hay relevantes.
+export const CONTEXT_BUILDER_DEFAULT_MIN_SIMILARITY = 0.35
 
 // Descarta fichas casi vacías (ej. contenido corrupto o truncado a nada)
 // antes de gastar presupuesto de contexto en ellas.
