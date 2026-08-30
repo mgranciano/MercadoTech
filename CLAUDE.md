@@ -12,7 +12,7 @@ MercadoTech es un marketplace de productos tecnológicos donde compradores naveg
 
 ## Comandos
 
-Scripts npm implementados (actualizados en Sesión 2):
+Scripts npm implementados (actualizados en Sesión 3):
 
 ```bash
 npm run dev          # Inicia dev server (Next.js, puerto 3000)
@@ -22,6 +22,7 @@ npm run lint         # Lint de código (ESLint)
 npm run type-check   # Verificación TypeScript strict (tsc --noEmit)
 npm run test         # Tests unitarios (Jest, por implementar)
 npm run test:e2e     # Tests e2e (Playwright, por implementar)
+npm run db:types     # Regenera types/database.ts desde el esquema local
 ```
 
 ---
@@ -64,6 +65,24 @@ UI (React) → Hooks → Services → Supabase (con RLS)
 
 5. **Tunables solo en `lib/constants/`.** Precios, límites de sesión, timeouts, modelos de IA: van en `lib/constants/` (versionado), nunca hardcodeados ni en .env.
 
+### Estructura real de `components/` y rutas (Sesión 3)
+
+- `components/`: `ui/` (shadcn), `shared/`, `layout/`, `auth/`, `catalog/`,
+  `product/`, `cart/`, `orders/`, `seller/` — una carpeta por dominio, sin
+  barrels.
+- Rutas: `(auth)/{login,register}`; `(shop)/{page,buscar,carrito,
+  categoria/[slug],favoritos,pedidos,pedidos/[id],producto/[id]}`;
+  `(seller)/vendedor/{productos,productos/[id]/editar,publicar,pedidos}` —
+  el panel de vendedor vive bajo el prefijo `/vendedor/...` para no chocar
+  con las rutas de comprador.
+- `lib/constants/`: `catalog.ts`, `product.ts`, `orders.ts`, `roles.ts`.
+
+**Verificación de capas** (deben devolver vacío):
+```bash
+grep -rl "@/lib/supabase" components hooks
+grep -rl "from \"@/services" components
+```
+
 ---
 
 ## Convenciones de código
@@ -98,6 +117,24 @@ UI (React) → Hooks → Services → Supabase (con RLS)
 ### Comentarios
 - **No comentes el QUÉ**, el código ya lo dice.
 - **Comenta el POR QUÉ** cuando hay una razón no obvia (workaround, restricción de negocio, edge case).
+
+### Convenciones aprendidas en Sesión 3
+
+- **Service con cliente inyectable:** cada función de `services/*.service.ts`
+  recibe el cliente de Supabase como último parámetro, con default al
+  cliente de navegador: `getProductById(id: string, supabase: Client =
+  createClient())`. No importan React; lanzan el error de Supabase tal cual,
+  el hook lo traduce a estado.
+- **`numeric` llega como `string` desde PostgREST** (`price`, `total`,
+  `price_snapshot`): el service lo convierte con `Number()`; los componentes
+  siempre reciben `number`.
+- **Componentes reciben `image_url` ya resuelta**, nunca `image_path` — la
+  arma `storage.service.getPublicUrl`.
+- **Filtros de catálogo viven en la URL** (`useSearchParams`), no en estado
+  local — así son compartibles y sobreviven a un refresh.
+- **Las transiciones del kanban de pedidos viven en el hook**
+  (`useSellerOrders.move()`), no en el componente ni en el service: valida
+  contra `ORDER_STATUS_FLOW` antes de llamar `updateOrderStatus`.
 
 ---
 
@@ -151,7 +188,21 @@ La Fase 2.1 implementó:
 
 ---
 
-*Última actualización: Sesión 2 (Fase 2.1)*
+## Estado del proyecto
+
+- **Sesión 1:** no se ejecutó como sesión independiente (ver `docs/BITACORA.md`).
+- **Sesión 2:** completa, incluidas las Fases 2.6 y 2.7 (commits `88b0681`, `8a472ee`).
+- **Sesión 3:** Fases 3.1–3.9 construidas y verificadas; solo 3.1–3.5 y el
+  provisioning están commiteados (`774a690`, `16816d1`). El resto (3.6–3.9)
+  está en el árbol de trabajo, pendiente de commit.
+- **Sesión 4 en adelante:** RAG real para `components/shared/AIChatbot.tsx`
+  (UI-only por ahora), voz, `app/api/v1/`.
+- Detalle completo: `docs/BITACORA.md` (bitácora acumulativa) y
+  `docs/SESION3_CHECKLIST.md` (pasada de calidad de la Fase 3.8).
+
+---
+
+*Última actualización: Sesión 3 (cierre)*
 
 <!-- BEGIN:nextjs-agent-rules -->
 
