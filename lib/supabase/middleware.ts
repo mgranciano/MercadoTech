@@ -7,6 +7,8 @@ const PROTECTED_ROUTES = [
   '/pedidos',
   '/favoritos',
   '/vendedor',
+  '/asistente',
+  '/soporte',
 ]
 
 export async function updateSession(request: NextRequest) {

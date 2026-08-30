@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu, X } from "lucide-react"
+import { Menu, X, Sparkles, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface Category {
@@ -37,6 +37,24 @@ export function MobileNav({ categories = [] }: MobileNavProps) {
             className="block px-3 py-2 rounded-md hover:bg-muted transition-colors"
           >
             Inicio
+          </Link>
+
+          <Link
+            href="/asistente"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted transition-colors"
+          >
+            <Sparkles size={16} />
+            Asistente
+          </Link>
+
+          <Link
+            href="/soporte"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted transition-colors"
+          >
+            <HelpCircle size={16} />
+            Soporte
           </Link>
 
           <div className="border-t pt-3">

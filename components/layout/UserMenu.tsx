@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { User, LogOut, Heart, Package, Store } from "lucide-react"
+import { User, LogOut, Heart, Package, Store, Sparkles, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -50,6 +50,22 @@ export function UserMenu({ user, role, onLogout, className }: UserMenuProps) {
           >
             <Heart size={16} />
             Favoritos
+          </Link>
+
+          <Link
+            href="/asistente"
+            className="flex gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
+          >
+            <Sparkles size={16} />
+            Asistente
+          </Link>
+
+          <Link
+            href="/soporte"
+            className="flex gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
+          >
+            <HelpCircle size={16} />
+            Soporte
           </Link>
 
           {(role === "seller" || role === "admin") && (

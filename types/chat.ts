@@ -3,6 +3,11 @@ export interface ChatSource {
   source_id: string
   title: string
   similarity: number
+  // Hidratados client-side por useChat (Fase 4.7) solo para fuentes de tipo
+  // 'producto', vía product.service.getProductById — el endpoint de chat no
+  // los conoce, context-builder es puro y no hace esa consulta.
+  image_url?: string
+  price?: number
 }
 
 // Historial de conversación (Fase 4.7): sources solo lo llevan los mensajes
