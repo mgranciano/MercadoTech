@@ -3,8 +3,9 @@ import { buildProductEmbeddingText, buildSupportArticleEmbeddingText, generateEm
 import type { Database, Json } from "@/types/database"
 
 // El cliente admin lo inyecta el caller (Route Handler o script, Fase 4.3):
-// este service ni lo importa ni lo crea, para poder testearlo con cualquier
-// cliente sin arrastrar lib/supabase/admin.ts.
+// este service ni lo importa ni lo instancia, para poder testearlo con
+// cualquier cliente sin acoplarse al módulo server-side de credenciales
+// elevadas.
 type AdminClient = SupabaseClient<Database>
 
 export type EmbeddingSourceType = "producto" | "articulo_soporte"
