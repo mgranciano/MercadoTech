@@ -1,9 +1,101 @@
 # BITÁCORA.md — Historial acumulativo de MercadoTech
 
 Bitácora de proyecto, una sección por sesión, la más reciente primero. Fuente
-de verdad: `git log`, el estado real de archivos y `docs/SESION3_CHECKLIST.md`.
-Documenta lo **construido**, no el plan — donde el código difiere de la spec
-(`MercadoTech_sesion3.md`), se señala como desviación.
+de verdad: `git log`, el estado real de archivos y documentación.
+Documenta lo **construido**, no el plan — donde el código difiere de la spec,
+se señala como desviación.
+
+---
+
+## Sesión 5 — Servidor MCP y Validación de Arquitectura (2026-08-31)
+
+**Nota de alcance:** Sesión 5 consistió en dos fases: construcción e integración del servidor MCP (Fases 5.1–5.5), con documentación de cada fase. Seguido de la Fase 5.6 (Auditoría Final), que ejecutó las Skills de validación automática sobre todo el código.
+
+### Fase 5.0 — Verificación de sesión 4 y stack MCP (commit `a850acf`)
+
+**Construido:** confirmó sesión 4 terminada, stack MCP (`@modelcontextprotocol/sdk`, `tsx`) instalado, `mcp/` inicializado con estructura base (`package.json`, `tsconfig.json`, `src/` vacío).
+
+### Fases 5.1–5.2 — Servidor MCP y primeras 5 tools (commit `04bb2e8`)
+
+**Construido:** `mcp/src/{index,env,server,context}.ts` (servidor funcionando por stdio), 5 tools operacionales: `list_categories`, `get_product`, `get_product_reviews`, `get_product_questions`, `get_order_status` — todas con validación Zod, manejo de errores vía `safe()` wrapper, cliente anon inyectable (sin credenciales en código).
+
+**Decisión:** cliente admin NO expuesto a tools — solo anon (RLS activo). Admin vive en `context.ts`, potencial consumo en sesiones futuras.
+
+### Fase 5.3 — 5 tools de búsqueda y chat (commit `7d3c9f0`)
+
+**Construido:** `search_products`, `search_knowledge`, `ask_chat`, `compare_products`, `get_store_stats` — composición de `services/` existentes (vector-search, chat.service) vía `mcp/src/shared/adapters.ts`.
+
+**Decisión:** adapters inyectan cliente anon, reutilizan lógica sin duplicación — patrón de "consumidor más del proyecto", no reinvención.
+
+### Fase 5.4 — Recursos dinámicos (commit `7d3c9f0`)
+
+**Construido:** 6 resources operacionales (`mercadotech://products`, `/sellers`, `/categories`, `/faq`, `/stats`, `/info`), templates URI para productos/vendedores, degradación elegante (si Supabase falla, lista static vacía sin colapso).
+
+**Verificado en vivo:** `list_resources` devuelve estructura válida incluso si una BD está caída; `read_resource` con URI inválida devuelve error claro sin 500.
+
+### Fase 5.5 — Prompts y documentación (commit `a850acf`)
+
+**Construido:** 3 prompts (`describir-producto`, `comparar-productos`, `redactar-respuesta`) que inyectan contexto del catálogo / comparativas / template de respuesta en modo soporte, reutilización de `services/chat.service` para búsqueda de contexto.
+
+**Decisión:** prompts viven en MCP, no duplican lógica de `lib/ai/prompts.ts` — complementan, no sustituyen.
+
+### Fase 5.6 — Auditoría final de arquitectura y seguridad (commit `7a8ae9c` + `1aa78f1`)
+
+**Construido:** `mcp/AUDIT.md` (566 líneas, formato profesional), validación de tres pilares:
+1. **Seguridad y RLS:** aislamiento anon/admin perfecto, Zod validation en todos los tools, sin credenciales expuestas.
+2. **Resiliencia:** `safe()` wrapper + degradación por resource, null-coalescing en adapters, composición robusta.
+3. **Aislamiento stdio:** redirección temprana de logs (línea 2 de `index.ts`), JSON-RPC preservado.
+
+**Ejecución de Skills (Fase 5.6 extended):**
+- **Validador automático:** 8/8 checks pasados (no Supabase en components/hooks, no services en componentes, @huggingface confinado, tipo-checking 0 errors).
+- **Architecture enforcer:** 11/11 reglas verificadas (capas respetan CLAUDE.md, sin barrels, MCP aislado).
+
+**Correcciones de tipos realizadas:**
+- 4 errores de `any` en mcp/src/ resueltos (use of `unknown` type assertion).
+- 1 error en lib/ai/completion.ts resuelto (Hugging Face API response typing).
+
+### Cierre de sesión 5
+
+**Commits de cierre:**
+- `7a8ae9c` — `docs: add final MCP architecture and security audit for Fase 5.6`
+- `1aa78f1` — `fix: resolve TypeScript type errors in MCP and AI modules (Fase 5.6)`
+
+---
+
+### (a) Criterios de aceptación de la sesión
+
+| Criterio | Estado | Evidencia |
+|---|---|---|
+| Servidor MCP funcional (stdio transport, JSON-RPC preservado) | ✅ | Fase 5.1, verificado en vivo |
+| 10 tools operacionales, validados, con manejo de errores | ✅ | Fases 5.2–5.3, Zod + `safe()` |
+| 6 resources + 2 templates, degradación elegante | ✅ | Fase 5.4, lista estática fallback |
+| 3 prompts que inyectan contexto dinámico | ✅ | Fase 5.5, búsqueda de contexto vía chat.service |
+| Auditoría de seguridad y arquitectura completa | ✅ | Fase 5.6 extended, mcp/AUDIT.md |
+| Validador automático: 8/8 checks pasados | ✅ | Fase 5.6 extended, grep verificados |
+| Architecture enforcer: 11/11 reglas confirmadas | ✅ | Fase 5.6 extended, capas respetan CLAUDE.md |
+| `npm run type-check` y `npm run lint` sin errores | ✅ | Fase 5.6, 0 errores de tipo |
+
+### (b) Deuda técnica y limitaciones conocidas (vigentes en el código actual)
+
+- **MCP solo en stdio:** no hay transport HTTP o WebSocket (reservado para Sesión 6+).
+- **Prompts sin streaming:** respuestas del modelo devueltas de una sola pieza, no streaming de tokens.
+- **Sin autenticación en MCP:** cualquier cliente que inicie el proceso puede llamar tools (seguridad delegada a RLS de Supabase).
+- **Rate limiting:** no hay límite de llamadas por minuto a tools (mejora Sesión 6).
+- **Auditing:** no se registran invocaciones de tools en la BD (mejora Sesión 6).
+- **Prompt caching:** no usa prompt caching del SDK MCP (mejora Sesión 6).
+
+### (c) Pendientes para sesión 6 y heredados de sesiones anteriores
+
+**Heredado de sesión 4:**
+- `components/shared/AIChatbot.tsx` aún sin conectar a RAG (está en backlog explícito desde sesión 4).
+- `seed.sql` sin crear `auth.identities` — bug persistente, login por password requiere parche local.
+
+**Para sesión 6:**
+- Implementar timeouts en handlers MCP (30s).
+- Agregar rate limiting (10 calls/min por tool).
+- Tests de MCP (Playwright e2e, Jest unitarios).
+- Auditoría de RLS policies en `supabase/policies.sql`.
+- Conectar FAB `AIChatbot.tsx` a RAG real o eliminar.
 
 ---
 

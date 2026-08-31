@@ -156,6 +156,21 @@ grep -rl "lib/supabase/admin" app components hooks services | grep -v api/v1
   (apunta a dos tablas origen distintas): fichas huérfanas posibles, las
   descarta quien hidrata (`vector-search.service`).
 
+### Convenciones aprendidas en Sesión 5
+
+- **Servidor MCP en `mcp/src/`:** consumidor igual que cualquier otra parte
+  del proyecto — importa `services/`, `lib/ai/`, `lib/constants/`, `types/`,
+  nunca `app/`, `components/` ni `hooks/`.
+- **Cliente admin en MCP:** permitido en `mcp/src/context.ts` (único lugar
+  donde se construye), nunca inyectado a tools — tools usan solo cliente
+  `anon` con RLS activo.
+- **Adapters MCP en `mcp/src/shared/adapters.ts`:** reutilizan servicios
+  existentes con cliente inyectable, evitan reimplementar lógica.
+- **Validación con Zod en tools:** todos los tools validan input (min/max
+  strings, enums blanqueados, número acotado), nunca `any` en callbacks.
+- **Degradación elegante (Lección 7):** si Supabase falla, recursos devuelven
+  lista estática o error claro, nunca colapso cascada.
+
 ---
 
 ## Fuente de verdad de la base de datos
@@ -192,6 +207,7 @@ Si la respuesta a (2) es "adelanto", no lo hagas. Si a (1) es "sí", detente.
 - **Autenticación:** Supabase Auth
 - **Storage:** Supabase Storage (imágenes)
 - **AI:** Hugging Face Inference (embeddings + chat, sesión 4); voz en sesión 8
+- **MCP:** Model Context Protocol (servidor stdio, tools, resources, prompts, sesión 5+)
 - **Testing:** Playwright (e2e), Jest (unitarios)
 
 ---
@@ -219,14 +235,63 @@ La Fase 2.1 implementó:
   `/asistente` y `/soporte`. Desviación: `components/shared/AIChatbot.tsx`
   (el FAB de la Fase 3.9) sigue sin conectar al RAG — ver deuda técnica en
   `docs/BITACORA.md`.
-- **Sesión 5 en adelante:** voz, `app/api/v1/` sigue creciendo.
+- **Sesión 5:** Fases 5.1–5.6 construidas y auditadas. Servidor MCP
+  operacional en `mcp/`: 10 tools, 6 resources, 3 prompts. Validación de
+  arquitectura completada (Skills de validador automático + enforcer). Auditoría
+  de seguridad en `mcp/AUDIT.md`: RLS, resiliencia, stdio aislado. Veredicto:
+  listo para producción.
+- **Sesión 6 en adelante:** timeouts, rate limiting, tests de MCP, voz.
 - Detalle completo: `docs/BITACORA.md` (bitácora acumulativa),
-  `docs/SESION3_CHECKLIST.md` (pasada de calidad de la Fase 3.8) y
-  `docs/RAG.md` (flujo RAG, casos de prueba, calibración).
+  `docs/SESION3_CHECKLIST.md` (pasada de calidad de la Fase 3.8),
+  `docs/RAG.md` (flujo RAG, casos de prueba, calibración) y
+  `mcp/AUDIT.md` (auditoría final de seguridad y arquitectura).
 
 ---
 
-*Última actualización: Sesión 4 (cierre)*
+## Servidor MCP (desde Sesión 5)
+
+### Estructura
+
+```
+mcp/
+├── src/
+│   ├── index.ts              # Entrada (stdio transport)
+│   ├── env.ts                # Carga .env.local
+│   ├── context.ts            # Clientes anon/admin (Decisión 8: inyectable)
+│   ├── server.ts             # Handlers de request (ListTools, CallTool, etc.)
+│   ├── tools/                # 10 tools con Zod validation + safe()
+│   ├── resources/            # 6 resources + 2 templates, degradación elegante
+│   ├── prompts/              # 3 prompts con inyección de contexto
+│   ├── shared/
+│   │   └── adapters.ts       # Reutilización de services (decisión #10)
+│   └── lib/
+│       ├── tool-result.ts
+│       └── safe.ts           # Wrapper de manejo de errores
+├── package.json
+├── tsconfig.json
+└── AUDIT.md                  # Auditoría: seguridad, resiliencia, stdio
+```
+
+### Reglas de MCP
+
+1. **Consumidor de servicios:** importa `services/`, `lib/ai/`, `lib/constants/`, `types/` — nunca `app/`, `components/`, `hooks/`.
+2. **Aislamiento de clientes:** solo anon en tools (RLS activo); admin permitido solo en `context.ts`.
+3. **Validación Zod:** todos los tools validan input, nunca `any`.
+4. **Adaptadores sin reimplementación:** `mcp/src/shared/adapters.ts` reutiliza lógica existente.
+5. **Degradación elegante:** si Supabase falla, recursos devuelven lista vacía o error claro.
+6. **Aislamiento stdio:** redirección de logs a stderr (línea 2 de `index.ts`), JSON-RPC preservado.
+
+### Verificación de reglas MCP
+
+```bash
+# Debe devolver vacío:
+grep -rl "from ['\"]@/app\|from ['\"]@/components\|from ['\"]@/hooks" mcp/src
+grep -rl "\.admin" mcp/src/tools mcp/src/resources mcp/src/prompts
+```
+
+---
+
+*Última actualización: Sesión 5 (cierre)*
 
 <!-- BEGIN:nextjs-agent-rules -->
 
