@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/client"
 const PRODUCT_IMAGES_BUCKET = "product-images"
 
 export async function getPublicUrl(bucket: string, path: string): Promise<string> {
+  // Si es una URL externa (Unsplash u otro CDN), devolver tal cual
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path
+  }
+
   const supabase = createClient()
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(path)
