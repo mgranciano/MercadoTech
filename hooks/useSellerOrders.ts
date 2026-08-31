@@ -6,6 +6,13 @@ import { ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from "@/lib/constants/orders"
 import type { OrderStatus } from "@/lib/constants/roles"
 import type { SellerOrder } from "@/types/seller"
 
+// Helper puro para validar transición de status (exportado para tests de Fase 6.3)
+export function validateStatusTransition(fromStatus: string, toStatus: string): boolean {
+  const fromIndex = ORDER_STATUS_FLOW.indexOf(fromStatus as OrderStatus)
+  const toIndex = ORDER_STATUS_FLOW.indexOf(toStatus as OrderStatus)
+  return fromIndex !== -1 && toIndex === fromIndex + 1
+}
+
 export function useSellerOrders(sellerId?: string) {
   const [orders, setOrders] = useState<SellerOrder[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,10 +63,7 @@ export function useSellerOrders(sellerId?: string) {
     const order = orders.find((o) => o.id === orderId)
     if (!order) return
 
-    const fromIndex = ORDER_STATUS_FLOW.indexOf(order.status as OrderStatus)
-    const toIndex = ORDER_STATUS_FLOW.indexOf(toStatus as OrderStatus)
-
-    if (fromIndex === -1 || toIndex !== fromIndex + 1) {
+    if (!validateStatusTransition(order.status, toStatus)) {
       const fromLabel = ORDER_STATUS_LABELS[order.status as OrderStatus] ?? order.status
       const toLabel = ORDER_STATUS_LABELS[toStatus as OrderStatus] ?? toStatus
       setMoveError(`No puedes mover un pedido de "${fromLabel}" directo a "${toLabel}".`)

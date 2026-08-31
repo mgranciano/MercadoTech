@@ -20,8 +20,7 @@ function mapOrder(order: OrderRow): OrderWithItems {
 // crea la orden y sus items con snapshot de precio/título, descuenta stock
 // y vacía el carrito. Si algo falla, Postgres revierte todo y el mensaje
 // de error ya dice qué producto falló — se propaga tal cual.
-export async function checkout(userId: string): Promise<string> {
-  const supabase = createClient()
+export async function checkout(userId: string, supabase: Client = createClient()): Promise<string> {
 
   const { data, error } = await supabase.rpc("create_order_from_cart", {
     p_buyer_id: userId,
