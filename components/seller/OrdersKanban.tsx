@@ -41,18 +41,21 @@ function DraggableCard({ order, draggable }: DraggableCardProps) {
     : undefined
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...(draggable ? attributes : {})}
-      {...(draggable ? listeners : {})}
-      className={cn(
-        "touch-none",
-        draggable && "cursor-grab active:cursor-grabbing",
-        isDragging && "z-10 opacity-50"
-      )}
-    >
-      <OrderKanbanCard order={order} />
+    <div data-testid={`kanban-card-${order.id}`}>
+      <div
+        ref={setNodeRef}
+        style={style}
+        data-testid="kanban-card-handle"
+        {...(draggable ? attributes : {})}
+        {...(draggable ? listeners : {})}
+        className={cn(
+          "touch-none",
+          draggable && "cursor-grab active:cursor-grabbing",
+          isDragging && "z-10 opacity-50"
+        )}
+      >
+        <OrderKanbanCard order={order} />
+      </div>
     </div>
   )
 }
@@ -70,6 +73,7 @@ function KanbanColumn({ status, label, orders, droppable }: KanbanColumnProps) {
   return (
     <div
       id={`kanban-col-${status}`}
+      data-testid={`kanban-column-${status}`}
       ref={setNodeRef}
       className={cn(
         "flex w-[85vw] max-w-[300px] shrink-0 snap-start flex-col gap-3 rounded-2xl border border-border bg-muted/40 p-3 sm:w-72 sm:max-w-none",
@@ -159,7 +163,7 @@ export function OrdersKanban({ orders, onMove }: OrdersKanbanProps) {
         ))}
       </div>
 
-      <div ref={scrollRef} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
+      <div ref={scrollRef} data-testid="kanban-board" className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
         {columns.map((col) => (
           <KanbanColumn
             key={col.status}

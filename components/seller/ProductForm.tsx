@@ -62,6 +62,7 @@ export function ProductForm({
         </label>
         <input
           id="title"
+          data-testid="product-title-input"
           value={values.title}
           onChange={(e) => onChange("title", e.target.value)}
           className={INPUT_CLASS}
@@ -75,6 +76,7 @@ export function ProductForm({
         </label>
         <textarea
           id="description"
+          data-testid="product-description-input"
           value={values.description}
           onChange={(e) => onChange("description", e.target.value)}
           rows={4}
@@ -141,6 +143,7 @@ export function ProductForm({
           </label>
           <input
             id="price"
+            data-testid="product-price-input"
             type="number"
             step="0.01"
             min="0"
@@ -157,6 +160,7 @@ export function ProductForm({
           </label>
           <input
             id="stock"
+            data-testid="product-stock-input"
             type="number"
             min="0"
             step="1"
@@ -182,7 +186,7 @@ export function ProductForm({
 
       {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
-      <Button type="submit" disabled={submitting} className="self-start">
+      <Button type="submit" disabled={submitting} data-testid="publish-btn" className="self-start">
         {submitting ? "Guardando..." : mode === "create" ? "Publicar producto" : "Guardar cambios"}
       </Button>
     </form>

@@ -12,14 +12,28 @@ export class LoginPage {
     const email = typeof emailOrUser === 'string' ? emailOrUser : emailOrUser.email
     const pwd = typeof emailOrUser === 'string' ? password! : emailOrUser.password
 
-    await this.page.goto('/login')
+    await this.page.goto('/login', { waitUntil: 'networkidle' })
+
+    // Fill and submit form
     await this.page.getByTestId('auth-email').fill(email)
     await this.page.getByTestId('auth-password').fill(pwd)
     await this.page.getByTestId('auth-submit').click()
-    // Wait for navigation to complete
-    await this.page.waitForURL((url) => !url.toString().includes('/login'), { timeout: 10000 })
-    // Wait for user menu to appear (indicates successful login)
-    await expect(this.page.getByTestId('nav-user-menu')).toBeVisible({ timeout: 10000 })
+
+    // Wait for either successful navigation OR nav menu appearing
+    // Try both conditions with reasonable timeout
+    const navigationPromise = this.page.waitForURL((url) => !url.toString().includes('/login'), { timeout: 5000 }).catch(() => null)
+    const userMenuPromise = this.page.getByTestId('nav-user-menu').waitFor({ timeout: 5000 }).catch(() => null)
+
+    const [navResult, menuResult] = await Promise.allSettled([navigationPromise, userMenuPromise])
+
+    // If user menu appeared, login was successful
+    const isLoggedIn = menuResult.status === 'fulfilled' && menuResult.value
+
+    if (!isLoggedIn) {
+      // Check if we got an error message
+      const errorMsg = await this.page.locator('text=/error|failed|invalid/i').textContent({ timeout: 1000 }).catch(() => null)
+      throw new Error(`Login failed for ${email}${errorMsg ? ': ' + errorMsg : ''}`)
+    }
   }
 
   async navigateToRegister() {

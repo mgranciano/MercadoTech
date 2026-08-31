@@ -34,7 +34,9 @@ export function OrderCard({ order }: OrderCardProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <OrderStatusBadge status={order.status} />
+        <div data-testid="order-status">
+          <OrderStatusBadge status={order.status} />
+        </div>
         <Price value={order.total} className="font-semibold" />
       </div>
     </Link>
