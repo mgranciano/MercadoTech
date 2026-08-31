@@ -147,41 +147,41 @@ on conflict do nothing;
 insert into public.product_images (id, product_id, image_path, position)
 values
   -- MacBook Pro 16" (Apple laptops, premium)
-  ('880e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&h=400&fit=crop', 0),
-  ('880e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440001', 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&h=400&fit=crop', 1),
+  ('880e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8', 0),
+  ('880e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440001', 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46', 1),
   -- iPhone 15 Pro (Apple phones)
-  ('880e8400-e29b-41d4-a716-446655440003', '770e8400-e29b-41d4-a716-446655440002', 'https://images.unsplash.com/photo-1592286927505-1def25115558?w=500&h=400&fit=crop', 0),
-  ('880e8400-e29b-41d4-a716-446655440004', '770e8400-e29b-41d4-a716-446655440002', 'https://images.unsplash.com/photo-1573936694497-d27f20b978e0?w=500&h=400&fit=crop', 1),
-  ('880e8400-e29b-41d4-a716-446655440005', '770e8400-e29b-41d4-a716-446655440002', 'https://images.unsplash.com/photo-1511707267537-b85faf00021e?w=500&h=400&fit=crop', 2),
+  ('880e8400-e29b-41d4-a716-446655440003', '770e8400-e29b-41d4-a716-446655440002', 'https://images.unsplash.com/photo-1592286927505-1def25115558', 0),
+  ('880e8400-e29b-41d4-a716-446655440004', '770e8400-e29b-41d4-a716-446655440002', 'https://images.unsplash.com/photo-1573936694497-d27f20b978e0', 1),
+  ('880e8400-e29b-41d4-a716-446655440005', '770e8400-e29b-41d4-a716-446655440002', 'https://images.unsplash.com/photo-1511707267537-b85faf00021e', 2),
   -- RTX 4090 (Graphics card, gaming)
-  ('880e8400-e29b-41d4-a716-446655440006', '770e8400-e29b-41d4-a716-446655440003', 'https://images.unsplash.com/photo-1587829191301-fa8f4c4fa0e6?w=500&h=400&fit=crop', 0),
-  ('880e8400-e29b-41d4-a716-446655440007', '770e8400-e29b-41d4-a716-446655440003', 'https://images.unsplash.com/photo-1591405351990-ef4ecdca7ebc?w=500&h=400&fit=crop', 1),
+  ('880e8400-e29b-41d4-a716-446655440006', '770e8400-e29b-41d4-a716-446655440003', 'https://images.unsplash.com/photo-1587829191301-fa8f4c4fa0e6', 0),
+  ('880e8400-e29b-41d4-a716-446655440007', '770e8400-e29b-41d4-a716-446655440003', 'https://images.unsplash.com/photo-1591405351990-ef4ecdca7ebc', 1),
   -- Sony WH-1000XM5 (Headphones, premium audio)
-  ('880e8400-e29b-41d4-a716-446655440008', '770e8400-e29b-41d4-a716-446655440004', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=400&fit=crop', 0),
+  ('880e8400-e29b-41d4-a716-446655440008', '770e8400-e29b-41d4-a716-446655440004', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e', 0),
   -- Logitech G Pro X2 (Gaming headset)
-  ('880e8400-e29b-41d4-a716-446655440009', '770e8400-e29b-41d4-a716-446655440005', 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&h=400&fit=crop', 0),
-  ('880e8400-e29b-41d4-a716-446655440010', '770e8400-e29b-41d4-a716-446655440005', 'https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=500&h=400&fit=crop', 1),
+  ('880e8400-e29b-41d4-a716-446655440009', '770e8400-e29b-41d4-a716-446655440005', 'https://images.unsplash.com/photo-1484704849700-f032a568e944', 0),
+  ('880e8400-e29b-41d4-a716-446655440010', '770e8400-e29b-41d4-a716-446655440005', 'https://images.unsplash.com/photo-1487215078519-e21cc028cb29', 1),
   -- Dell UltraSharp U2723DE (Monitor, 4K)
-  ('880e8400-e29b-41d4-a716-446655440011', '770e8400-e29b-41d4-a716-446655440006', 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=500&h=400&fit=crop', 0),
+  ('880e8400-e29b-41d4-a716-446655440011', '770e8400-e29b-41d4-a716-446655440006', 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04', 0),
   -- Cable HDMI 2.1 8K (Tech accessories)
-  ('880e8400-e29b-41d4-a716-446655440012', '770e8400-e29b-41d4-a716-446655440007', 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=500&h=400&fit=crop', 0),
+  ('880e8400-e29b-41d4-a716-446655440012', '770e8400-e29b-41d4-a716-446655440007', 'https://images.unsplash.com/photo-1621905251918-48416bd8575a', 0),
   -- TP-Link Archer AXE300 (Router, networking)
-  ('880e8400-e29b-41d4-a716-446655440013', '770e8400-e29b-41d4-a716-446655440008', 'https://images.unsplash.com/photo-1569163139394-de4798aa62b3?w=500&h=400&fit=crop', 0),
+  ('880e8400-e29b-41d4-a716-446655440013', '770e8400-e29b-41d4-a716-446655440008', 'https://images.unsplash.com/photo-1569163139394-de4798aa62b3', 0),
   -- Samsung Galaxy S24 (Android phone)
-  ('880e8400-e29b-41d4-a716-446655440014', '770e8400-e29b-41d4-a716-446655440010', 'https://images.unsplash.com/photo-1511921228888-f16a19d91bbe?w=500&h=400&fit=crop', 0),
-  ('880e8400-e29b-41d4-a716-446655440015', '770e8400-e29b-41d4-a716-446655440010', 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=500&h=400&fit=crop', 1),
+  ('880e8400-e29b-41d4-a716-446655440014', '770e8400-e29b-41d4-a716-446655440010', 'https://images.unsplash.com/photo-1511921228888-f16a19d91bbe', 0),
+  ('880e8400-e29b-41d4-a716-446655440015', '770e8400-e29b-41d4-a716-446655440010', 'https://images.unsplash.com/photo-1464207687429-7505649dae38', 1),
   -- Lenovo ThinkPad X1 (Business laptop)
-  ('880e8400-e29b-41d4-a716-446655440016', '770e8400-e29b-41d4-a716-446655440011', 'https://images.unsplash.com/photo-1588872657840-90a6d3fa3a9b?w=500&h=400&fit=crop', 0),
+  ('880e8400-e29b-41d4-a716-446655440016', '770e8400-e29b-41d4-a716-446655440011', 'https://images.unsplash.com/photo-1588872657840-90a6d3fa3a9b', 0),
   -- AMD Ryzen 9 7950X (CPU, processor)
-  ('880e8400-e29b-41d4-a716-446655440017', '770e8400-e29b-41d4-a716-446655440012', 'https://images.unsplash.com/photo-1555684586-d282f0aa896e?w=500&h=400&fit=crop', 0),
+  ('880e8400-e29b-41d4-a716-446655440017', '770e8400-e29b-41d4-a716-446655440012', 'https://images.unsplash.com/photo-1555684586-d282f0aa896e', 0),
   -- Razer DeathAdder V3 (Gaming mouse)
-  ('880e8400-e29b-41d4-a716-446655440018', '770e8400-e29b-41d4-a716-446655440013', 'https://images.unsplash.com/photo-1587829191301-fa8f4c4fa0e6?w=500&h=400&fit=crop', 0),
+  ('880e8400-e29b-41d4-a716-446655440018', '770e8400-e29b-41d4-a716-446655440013', 'https://images.unsplash.com/photo-1587829191301-fa8f4c4fa0e6', 0),
   -- JBL Flip 6 (Portable speaker)
-  ('880e8400-e29b-41d4-a716-446655440019', '770e8400-e29b-41d4-a716-446655440014', 'https://images.unsplash.com/photo-1589003077984-894e133dabab?w=500&h=400&fit=crop', 0),
+  ('880e8400-e29b-41d4-a716-446655440019', '770e8400-e29b-41d4-a716-446655440014', 'https://images.unsplash.com/photo-1589003077984-894e133dabab', 0),
   -- LG 27GN950 (Gaming monitor, 4K 144Hz)
-  ('880e8400-e29b-41d4-a716-446655440020', '770e8400-e29b-41d4-a716-446655440015', 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=400&fit=crop', 0),
+  ('880e8400-e29b-41d4-a716-446655440020', '770e8400-e29b-41d4-a716-446655440015', 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97', 0),
   -- Cisco Catalyst 9200 (Enterprise networking)
-  ('880e8400-e29b-41d4-a716-446655440021', '770e8400-e29b-41d4-a716-446655440016', 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=400&fit=crop', 0)
+  ('880e8400-e29b-41d4-a716-446655440021', '770e8400-e29b-41d4-a716-446655440016', 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97', 0)
 on conflict do nothing;
 
 -- ============================================================================
