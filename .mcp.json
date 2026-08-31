@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "mercadotech": {
+      "command": "node",
+      "args": ["mcp/dist/index.js"],
+      "env": {}
+    }
+  }
+}
