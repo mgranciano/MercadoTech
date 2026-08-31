@@ -65,7 +65,7 @@ export function createServer(): Server {
       // Lección 7: degrada recursos caídos, no falla todo
       const resources = await listAllResources(anon)
       return {
-        resources: resources as any,
+        resources: resources as unknown,
         resourceTemplates: RESOURCE_TEMPLATES,
       }
     } catch (error) {

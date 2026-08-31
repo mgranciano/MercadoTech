@@ -95,7 +95,7 @@ export async function getOrderByIdAdapter(
   status: string
   created_at: string
   total: number
-  order_items: Array<{ product_id: string; quantity: number; price_snapshot: string }>
+  order_items: Array<{ product_id: string; quantity: number; price_snapshot: number }>
 } | null> {
   const { data, error } = await supabase
     .from('orders')
@@ -107,13 +107,16 @@ export async function getOrderByIdAdapter(
     return null
   }
 
+  const rawData = data as unknown as { order_items?: Array<{ product_id: string; quantity: number; price_snapshot: string }> }
+  const transformedItems = (rawData.order_items || []).map((item) => ({
+    ...item,
+    price_snapshot: Number(item.price_snapshot),
+  }))
+
   return {
     ...data,
     total: Number(data.total),
-    order_items: (data.order_items || []).map((item: any) => ({
-      ...item,
-      price_snapshot: Number(item.price_snapshot),
-    })),
+    order_items: transformedItems as unknown as Array<{ product_id: string; quantity: number; price_snapshot: number }>,
   }
 }
 
@@ -172,12 +175,12 @@ export async function getStoreStatsAdapter(supabase: Client): Promise<{
 
   const avgRating =
     ratings && ratings.length > 0
-      ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length
+      ? ratings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / ratings.length
       : 0
 
   const avgPrice =
     prices && prices.length > 0
-      ? prices.reduce((sum: number, p: any) => sum + Number(p.price), 0) / prices.length
+      ? prices.reduce((sum: number, p: { price: string | number }) => sum + Number(p.price), 0) / prices.length
       : 0
 
   return {

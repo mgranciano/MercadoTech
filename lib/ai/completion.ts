@@ -69,8 +69,8 @@ export async function generateCompletion(system: string, user: string): Promise<
     throw new Error(`Hugging Face respondió con error ${response.status} al modelo "${model}": ${body}`)
   }
 
-  const data = await response.json()
-  const choice = data?.choices?.[0]
+  const data = await response.json() as unknown
+  const choice = (data as { choices?: Array<{ message?: { content?: string }; finish_reason?: string }> })?.choices?.[0]
   const content = choice?.message?.content
 
   if (typeof content !== "string" || content.length === 0) {
@@ -82,6 +82,6 @@ export async function generateCompletion(system: string, user: string): Promise<
   return {
     text: content,
     model,
-    stopReason: choice.finish_reason ?? null,
+    stopReason: (choice as { finish_reason?: string }).finish_reason ?? null,
   }
 }
