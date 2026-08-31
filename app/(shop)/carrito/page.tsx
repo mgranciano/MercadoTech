@@ -23,7 +23,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center" data-testid="cart-empty-message">
         <EmptyState
           icon={<ShoppingCart size={48} />}
           title="Tu carrito está vacío"
@@ -39,7 +39,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="grid gap-8 py-8 lg:grid-cols-3">
+    <div className="grid gap-8 py-8 lg:grid-cols-3" data-testid="cart-container">
       <div className="lg:col-span-2">
         <h1 className="mb-4 text-2xl font-bold">Carrito de compras</h1>
         <div className="rounded-lg border border-border px-4">

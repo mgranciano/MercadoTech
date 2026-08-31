@@ -55,10 +55,10 @@ export default function OrderDetailPage() {
     <div className="flex flex-col gap-6 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Pedido #{order.id.slice(0, 8)}</h1>
+          <h1 className="text-2xl font-bold" data-testid="order-id">Pedido #{order.id.slice(0, 8)}</h1>
           <p className="text-sm text-muted-foreground">{formatDate(order.created_at)}</p>
         </div>
-        <OrderStatusBadge status={order.status} />
+        <div data-testid="order-status"><OrderStatusBadge status={order.status} />
       </div>
 
       <OrderItemsTable items={order.order_items} />

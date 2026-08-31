@@ -23,7 +23,7 @@ export class ProductDetailPage {
   }
 
   async setQuantity(quantity: number) {
-    await this.page.getByTestId('product-quantity-input').fill(String(quantity))
+    await this.page.getByTestId('product-quantity-select').selectOption(String(quantity))
   }
 
   async addToCart() {

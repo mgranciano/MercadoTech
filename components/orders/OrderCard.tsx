@@ -22,6 +22,7 @@ export function OrderCard({ order }: OrderCardProps) {
     <Link
       href={`/pedidos/${order.id}`}
       className="flex flex-col gap-2 rounded-lg border border-border p-4 transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+      data-testid={`order-item-${order.id}`}
     >
       <div>
         <p className="text-sm text-muted-foreground">

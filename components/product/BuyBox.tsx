@@ -68,6 +68,7 @@ export function BuyBox({
             value={quantity}
             onChange={(e) => setQuantity(Number(e.target.value))}
             className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+            data-testid="product-quantity-select"
           >
             {Array.from({ length: stock }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
@@ -80,7 +81,7 @@ export function BuyBox({
 
       {disabledReason && <p className="text-sm text-destructive">{disabledReason}</p>}
 
-      <Button onClick={handleAddToCart} disabled={!canBuy} className="gap-2">
+      <Button onClick={handleAddToCart} disabled={!canBuy} className="gap-2" data-testid="product-add-to-cart-btn">
         <ShoppingCart size={18} />
         Agregar al carrito
       </Button>

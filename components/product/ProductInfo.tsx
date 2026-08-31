@@ -22,15 +22,21 @@ export function ProductInfo({
     <div className="flex flex-col gap-3">
       <ConditionBadge condition={condition as "nuevo" | "usado" | "reacondicionado"} />
 
-      <h1 className="text-2xl font-bold">{title}</h1>
+      <h1 className="text-2xl font-bold" data-testid="product-title">{title}</h1>
 
       {brand && <p className="text-sm text-muted-foreground">Marca: {brand}</p>}
 
-      <Price value={price} className="text-3xl font-bold text-primary" />
+      <Price value={price} className="text-3xl font-bold text-primary" data-testid="product-price" />
 
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground" data-testid="product-stock">
         {stock > 0 ? `${stock} disponible${stock === 1 ? "" : "s"}` : "Sin stock"}
       </p>
+
+      {stock === 0 && (
+        <p className="text-sm text-destructive" data-testid="product-stock-zero-msg">
+          Producto sin stock disponible
+        </p>
+      )}
 
       {description && (
         <div className="pt-2">

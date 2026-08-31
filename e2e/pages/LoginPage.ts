@@ -4,15 +4,22 @@ import type { TestUser } from '../data/users'
 export class LoginPage {
   constructor(private page: Page) {}
 
-  async login(user: TestUser) {
+  async navigate() {
     await this.page.goto('/login')
-    await this.page.getByTestId('auth-email').fill(user.email)
-    await this.page.getByTestId('auth-password').fill(user.password)
+  }
+
+  async login(emailOrUser: string | TestUser, password?: string) {
+    const email = typeof emailOrUser === 'string' ? emailOrUser : emailOrUser.email
+    const pwd = typeof emailOrUser === 'string' ? password! : emailOrUser.password
+
+    await this.page.goto('/login')
+    await this.page.getByTestId('auth-email').fill(email)
+    await this.page.getByTestId('auth-password').fill(pwd)
     await this.page.getByTestId('auth-submit').click()
     // Wait for navigation to complete
-    await this.page.waitForURL((url) => !url.toString().includes('/login'))
+    await this.page.waitForURL((url) => !url.toString().includes('/login'), { timeout: 10000 })
     // Wait for user menu to appear (indicates successful login)
-    await expect(this.page.getByTestId('nav-user-menu')).toBeVisible()
+    await expect(this.page.getByTestId('nav-user-menu')).toBeVisible({ timeout: 10000 })
   }
 
   async navigateToRegister() {

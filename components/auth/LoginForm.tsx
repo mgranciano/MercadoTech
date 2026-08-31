@@ -54,6 +54,7 @@ export function LoginForm({ onSubmit, loading = false, error }: LoginFormProps) 
           onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
           disabled={loading}
           className="h-12 rounded-xl"
+          data-testid="auth-email"
         />
         {validationErrors.email && (
           <p className="mt-1 text-xs text-destructive">{validationErrors.email}</p>
@@ -74,6 +75,7 @@ export function LoginForm({ onSubmit, loading = false, error }: LoginFormProps) 
           }
           disabled={loading}
           className="h-12 rounded-xl"
+          data-testid="auth-password"
         />
         {validationErrors.password && (
           <p className="mt-1 text-xs text-destructive">{validationErrors.password}</p>
@@ -90,6 +92,7 @@ export function LoginForm({ onSubmit, loading = false, error }: LoginFormProps) 
         type="submit"
         disabled={loading}
         className="h-[50px] w-full rounded-xl bg-gradient-to-r from-ai-cyan via-primary to-accent text-base font-extrabold text-white shadow-[0_10px_26px_rgba(11,79,214,.3)] transition hover:-translate-y-0.5"
+        data-testid="auth-submit"
       >
         {loading ? "Ingresando..." : "Iniciar sesión"}
       </Button>

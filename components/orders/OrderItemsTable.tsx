@@ -19,9 +19,9 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
         </thead>
         <tbody className="divide-y divide-border">
           {items.map((item) => (
-            <tr key={item.id}>
+            <tr key={item.id} data-testid={`order-item-${item.id}`}>
               <td className="px-4 py-3">{item.title_snapshot}</td>
-              <td className="px-4 py-3 text-right">
+              <td className="px-4 py-3 text-right" data-testid={`order-item-price-${item.id}`}>
                 <Price value={item.price_snapshot} />
               </td>
               <td className="px-4 py-3 text-right">{item.quantity}</td>

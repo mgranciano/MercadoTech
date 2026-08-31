@@ -44,9 +44,11 @@ export default function OrdersPage() {
   return (
     <div className="flex flex-col gap-4 py-8">
       <h1 className="text-2xl font-bold">Mis pedidos</h1>
-      {orders.map((order) => (
-        <OrderCard key={order.id} order={order} />
-      ))}
+      <div data-testid="orders-list">
+        {orders.map((order) => (
+          <OrderCard key={order.id} order={order} />
+        ))}
+      </div>
     </div>
   )
 }

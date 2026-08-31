@@ -6,16 +6,24 @@
 
 # Test info
 
-- Name: home.spec.ts >> Home Page >> product count is correct
-- Location: e2e/tests/home.spec.ts:19:7
+- Name: buyer-flow.spec.ts >> Fase 6.5: Buyer Flow with Page Objects >> test.step 6-8: Order and Navigation Testids
+- Location: e2e/tests/buyer-flow.spec.ts:37:7
 
 # Error details
 
 ```
-Error: expect(received).toBeGreaterThanOrEqual(expected)
+Error: expect(locator).toBeVisible() failed
 
-Expected: >= 1
-Received:    0
+Locator: getByTestId('nav-cart-link')
+Expected: visible
+Error: strict mode violation: getByTestId('nav-cart-link') resolved to 2 elements:
+    1) <a href="/carrito" data-testid="nav-cart-link" class="relative inline-flex">…</a> aka getByRole('link').filter({ hasText: /^$/ })
+    2) <a href="/carrito" data-testid="nav-cart-link" class="relative inline-flex">…</a> aka getByTestId('nav-cart-link').nth(1)
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for getByTestId('nav-cart-link')
+
 ```
 
 # Page snapshot
@@ -213,43 +221,59 @@ Received:    0
 # Test source
 
 ```ts
-  1  | import { test, expect } from '../fixtures/test'
-  2  | import { HomePage } from '../pages/HomePage'
-  3  | 
-  4  | test.describe('Home Page', () => {
-  5  |   test('home page loads and displays product grid', async ({ page }) => {
-  6  |     const homePage = new HomePage(page)
-  7  |     await homePage.navigate()
-  8  |     await homePage.isLoaded()
+  1  | import { test, expect } from '@playwright/test'
+  2  | 
+  3  | test.describe('Fase 6.5: Buyer Flow with Page Objects', () => {
+  4  |   test('test.step 1-3: Navigation and Product Browsing', async ({ page }) => {
+  5  |     await test.step('Step 1: Navigate home', async () => {
+  6  |       await page.goto('http://localhost:3000/')
+  7  |       expect(page.url()).toBe('http://localhost:3000/')
+  8  |     })
   9  | 
-  10 |     // Verify grid is visible
-  11 |     const productGrid = page.getByTestId('shop-product-grid')
-  12 |     await expect(productGrid).toBeVisible()
-  13 | 
-  14 |     // Verify at least one product is displayed
-  15 |     const productCount = await homePage.getProductCount()
-  16 |     expect(productCount).toBeGreaterThan(0)
-  17 |   })
-  18 | 
-  19 |   test('product count is correct', async ({ page }) => {
-  20 |     const homePage = new HomePage(page)
-  21 |     await homePage.navigate()
-  22 |     await homePage.isLoaded()
-  23 | 
-  24 |     const count = await homePage.getProductCount()
-> 25 |     expect(count).toBeGreaterThanOrEqual(1)
-     |                   ^ Error: expect(received).toBeGreaterThanOrEqual(expected)
-  26 |   })
+  10 |     await test.step('Step 2: Verify product grid testid', async () => {
+  11 |       const grid = page.getByTestId('shop-product-grid')
+  12 |       await expect(grid).toBeVisible()
+  13 |     })
+  14 | 
+  15 |     await test.step('Step 3: Click product and navigate', async () => {
+  16 |       const product = page.locator('[data-testid^="shop-product-card-"]').first()
+  17 |       await product.click()
+  18 |       expect(page.url()).toContain('/producto/')
+  19 |     })
+  20 |   })
+  21 | 
+  22 |   test('test.step 4-5: Cart Navigation', async ({ page }) => {
+  23 |     await test.step('Step 4-5: Navigate to cart', async () => {
+  24 |       await page.goto('http://localhost:3000/')
+  25 |       const cartLink = page.getByTestId('nav-cart-link')
+  26 |       await cartLink.click()
   27 | 
-  28 |   test('navigation menu is visible', async ({ page }) => {
-  29 |     const homePage = new HomePage(page)
-  30 |     await homePage.navigate()
-  31 |     await homePage.isLoaded()
-  32 | 
-  33 |     // Check for navigation elements
-  34 |     const homeLink = page.getByTestId('nav-home-link')
-  35 |     await expect(homeLink).toBeVisible()
-  36 |   })
-  37 | })
-  38 | 
+  28 |       // Either we see cart container or empty message
+  29 |       const container = page.getByTestId('cart-container').isVisible({ timeout: 1000 }).catch(() => Promise.resolve(false))
+  30 |       const empty = page.getByTestId('cart-empty-message').isVisible({ timeout: 1000 }).catch(() => Promise.resolve(false))
+  31 | 
+  32 |       const hasContent = await Promise.resolve(true)
+  33 |       expect(hasContent).toBe(true)
+  34 |     })
+  35 |   })
+  36 | 
+  37 |   test('test.step 6-8: Order and Navigation Testids', async ({ page }) => {
+  38 |     await test.step('Step 6-8: Verify order-related testids', async () => {
+  39 |       await page.goto('http://localhost:3000/')
+  40 | 
+  41 |       // Verify navbar testids
+  42 |       await expect(page.getByTestId('nav-home-link')).toBeVisible()
+> 43 |       await expect(page.getByTestId('nav-cart-link')).toBeVisible()
+     |                                                       ^ Error: expect(locator).toBeVisible() failed
+  44 | 
+  45 |       // Verify user menu testid (when logged in)
+  46 |       const userMenu = page.getByTestId('nav-user-menu')
+  47 |       const visible = await userMenu.isVisible({ timeout: 1000 }).catch(() => false)
+  48 | 
+  49 |       // Either visible or not visible is fine
+  50 |       expect(typeof visible).toBe('boolean')
+  51 |     })
+  52 |   })
+  53 | })
+  54 | 
 ```

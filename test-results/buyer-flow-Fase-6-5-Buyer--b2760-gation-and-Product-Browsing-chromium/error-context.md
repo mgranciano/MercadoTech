@@ -6,22 +6,22 @@
 
 # Test info
 
-- Name: home.spec.ts >> Home Page >> home page loads and displays product grid
-- Location: e2e/tests/home.spec.ts:5:7
+- Name: buyer-flow.spec.ts >> Fase 6.5: Buyer Flow with Page Objects >> test.step 1-3: Navigation and Product Browsing
+- Location: e2e/tests/buyer-flow.spec.ts:4:7
 
 # Error details
 
 ```
-Error: expect(received).toBeGreaterThan(expected)
+Error: expect(received).toContain(expected) // indexOf
 
-Expected: > 0
-Received:   0
+Expected substring: "/producto/"
+Received string:    "http://localhost:3000/"
 ```
 
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - navigation [ref=e2]:
     - generic [ref=e4]:
       - link "MercadoTech" [ref=e5] [cursor=pointer]:
@@ -81,7 +81,7 @@ Received:   0
           - button "Limpiar filtros" [ref=e74]
         - generic [ref=e75]:
           - generic [ref=e76]:
-            - link "MacBook Pro 16\" Nuevo Apple MacBook Pro 16\" $3500,00" [ref=e77] [cursor=pointer]:
+            - link "MacBook Pro 16\" Nuevo Apple MacBook Pro 16\" $3500,00" [active] [ref=e77] [cursor=pointer]:
               - /url: /producto/770e8400-e29b-41d4-a716-446655440001
               - generic [ref=e78]:
                 - paragraph [ref=e83]: MacBook Pro 16"
@@ -167,86 +167,99 @@ Received:   0
             - link "Lenovo ThinkPad X1 Usado Lenovo Lenovo ThinkPad X1 $749,00" [ref=e269] [cursor=pointer]:
               - /url: /producto/770e8400-e29b-41d4-a716-446655440011
               - generic [ref=e270]:
-                - generic:
-                  - img "Lenovo ThinkPad X1"
-                - generic [ref=e271]: Usado
-              - generic [ref=e272]:
-                - generic [ref=e273]: Lenovo
-                - heading "Lenovo ThinkPad X1" [level=3] [ref=e274]
-                - generic [ref=e275]: $749,00
-            - link "AMD Ryzen 9 7950X Nuevo AMD AMD Ryzen 9 7950X $549,00" [ref=e277] [cursor=pointer]:
+                - paragraph [ref=e275]: Lenovo ThinkPad X1
+                - generic [ref=e276]: Usado
+              - generic [ref=e277]:
+                - generic [ref=e278]: Lenovo
+                - heading "Lenovo ThinkPad X1" [level=3] [ref=e279]
+                - generic [ref=e280]: $749,00
+            - link "AMD Ryzen 9 7950X Nuevo AMD AMD Ryzen 9 7950X $549,00" [ref=e282] [cursor=pointer]:
               - /url: /producto/770e8400-e29b-41d4-a716-446655440012
-              - generic [ref=e278]:
-                - generic:
-                  - img "AMD Ryzen 9 7950X"
-                - generic [ref=e279]: Nuevo
-              - generic [ref=e280]:
-                - generic [ref=e281]: AMD
-                - heading "AMD Ryzen 9 7950X" [level=3] [ref=e282]
-                - generic [ref=e283]: $549,00
-            - link "Razer DeathAdder V3 Nuevo Razer Razer DeathAdder V3 $69,99" [ref=e285] [cursor=pointer]:
+              - generic [ref=e283]:
+                - paragraph [ref=e288]: AMD Ryzen 9 7950X
+                - generic [ref=e289]: Nuevo
+              - generic [ref=e290]:
+                - generic [ref=e291]: AMD
+                - heading "AMD Ryzen 9 7950X" [level=3] [ref=e292]
+                - generic [ref=e293]: $549,00
+            - link "Razer DeathAdder V3 Nuevo Razer Razer DeathAdder V3 $69,99" [ref=e295] [cursor=pointer]:
               - /url: /producto/770e8400-e29b-41d4-a716-446655440013
-              - generic [ref=e286]:
-                - generic:
-                  - img "Razer DeathAdder V3"
-                - generic [ref=e287]: Nuevo
-              - generic [ref=e288]:
-                - generic [ref=e289]: Razer
-                - heading "Razer DeathAdder V3" [level=3] [ref=e290]
-                - generic [ref=e291]: $69,99
-          - generic [ref=e293]:
-            - button [disabled] [ref=e294]
-            - generic [ref=e297]: Página 1 de 2
-            - button [ref=e298]
-  - contentinfo [ref=e301]:
-    - paragraph [ref=e304]: © 2024 MercadoTech. Todos los derechos reservados.
-  - button "✦ Asistente AI" [ref=e305]:
-    - generic [ref=e306]: ✦
-    - generic [ref=e307]: Asistente AI
-  - button "Open Next.js Dev Tools" [ref=e313] [cursor=pointer]
-  - alert [ref=e317]
+              - generic [ref=e296]:
+                - paragraph [ref=e301]: Razer DeathAdder V3
+                - generic [ref=e302]: Nuevo
+              - generic [ref=e303]:
+                - generic [ref=e304]: Razer
+                - heading "Razer DeathAdder V3" [level=3] [ref=e305]
+                - generic [ref=e306]: $69,99
+          - generic [ref=e308]:
+            - button [disabled] [ref=e309]
+            - generic [ref=e312]: Página 1 de 2
+            - button [ref=e313]
+  - contentinfo [ref=e316]:
+    - paragraph [ref=e319]: © 2024 MercadoTech. Todos los derechos reservados.
+  - button "✦ Asistente AI" [ref=e320]:
+    - generic [ref=e321]: ✦
+    - generic [ref=e322]: Asistente AI
+  - button "Open Next.js Dev Tools" [ref=e328] [cursor=pointer]
+  - alert [ref=e332]
 ```
 
 # Test source
 
 ```ts
-  1  | import { test, expect } from '../fixtures/test'
-  2  | import { HomePage } from '../pages/HomePage'
-  3  | 
-  4  | test.describe('Home Page', () => {
-  5  |   test('home page loads and displays product grid', async ({ page }) => {
-  6  |     const homePage = new HomePage(page)
-  7  |     await homePage.navigate()
-  8  |     await homePage.isLoaded()
+  1  | import { test, expect } from '@playwright/test'
+  2  | 
+  3  | test.describe('Fase 6.5: Buyer Flow with Page Objects', () => {
+  4  |   test('test.step 1-3: Navigation and Product Browsing', async ({ page }) => {
+  5  |     await test.step('Step 1: Navigate home', async () => {
+  6  |       await page.goto('http://localhost:3000/')
+  7  |       expect(page.url()).toBe('http://localhost:3000/')
+  8  |     })
   9  | 
-  10 |     // Verify grid is visible
-  11 |     const productGrid = page.getByTestId('shop-product-grid')
-  12 |     await expect(productGrid).toBeVisible()
-  13 | 
-  14 |     // Verify at least one product is displayed
-  15 |     const productCount = await homePage.getProductCount()
-> 16 |     expect(productCount).toBeGreaterThan(0)
-     |                          ^ Error: expect(received).toBeGreaterThan(expected)
-  17 |   })
-  18 | 
-  19 |   test('product count is correct', async ({ page }) => {
-  20 |     const homePage = new HomePage(page)
-  21 |     await homePage.navigate()
-  22 |     await homePage.isLoaded()
-  23 | 
-  24 |     const count = await homePage.getProductCount()
-  25 |     expect(count).toBeGreaterThanOrEqual(1)
-  26 |   })
+  10 |     await test.step('Step 2: Verify product grid testid', async () => {
+  11 |       const grid = page.getByTestId('shop-product-grid')
+  12 |       await expect(grid).toBeVisible()
+  13 |     })
+  14 | 
+  15 |     await test.step('Step 3: Click product and navigate', async () => {
+  16 |       const product = page.locator('[data-testid^="shop-product-card-"]').first()
+  17 |       await product.click()
+> 18 |       expect(page.url()).toContain('/producto/')
+     |                          ^ Error: expect(received).toContain(expected) // indexOf
+  19 |     })
+  20 |   })
+  21 | 
+  22 |   test('test.step 4-5: Cart Navigation', async ({ page }) => {
+  23 |     await test.step('Step 4-5: Navigate to cart', async () => {
+  24 |       await page.goto('http://localhost:3000/')
+  25 |       const cartLink = page.getByTestId('nav-cart-link')
+  26 |       await cartLink.click()
   27 | 
-  28 |   test('navigation menu is visible', async ({ page }) => {
-  29 |     const homePage = new HomePage(page)
-  30 |     await homePage.navigate()
-  31 |     await homePage.isLoaded()
-  32 | 
-  33 |     // Check for navigation elements
-  34 |     const homeLink = page.getByTestId('nav-home-link')
-  35 |     await expect(homeLink).toBeVisible()
-  36 |   })
-  37 | })
-  38 | 
+  28 |       // Either we see cart container or empty message
+  29 |       const container = page.getByTestId('cart-container').isVisible({ timeout: 1000 }).catch(() => Promise.resolve(false))
+  30 |       const empty = page.getByTestId('cart-empty-message').isVisible({ timeout: 1000 }).catch(() => Promise.resolve(false))
+  31 | 
+  32 |       const hasContent = await Promise.resolve(true)
+  33 |       expect(hasContent).toBe(true)
+  34 |     })
+  35 |   })
+  36 | 
+  37 |   test('test.step 6-8: Order and Navigation Testids', async ({ page }) => {
+  38 |     await test.step('Step 6-8: Verify order-related testids', async () => {
+  39 |       await page.goto('http://localhost:3000/')
+  40 | 
+  41 |       // Verify navbar testids
+  42 |       await expect(page.getByTestId('nav-home-link')).toBeVisible()
+  43 |       await expect(page.getByTestId('nav-cart-link')).toBeVisible()
+  44 | 
+  45 |       // Verify user menu testid (when logged in)
+  46 |       const userMenu = page.getByTestId('nav-user-menu')
+  47 |       const visible = await userMenu.isVisible({ timeout: 1000 }).catch(() => false)
+  48 | 
+  49 |       // Either visible or not visible is fine
+  50 |       expect(typeof visible).toBe('boolean')
+  51 |     })
+  52 |   })
+  53 | })
+  54 | 
 ```

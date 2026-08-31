@@ -33,7 +33,7 @@ export function CartSummary({ subtotal, itemCount, onCheckout }: CartSummaryProp
     <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">Subtotal ({itemCount})</span>
-        <Price value={subtotal} className="text-lg font-bold" />
+        <Price value={subtotal} className="text-lg font-bold" data-testid="cart-subtotal" />
       </div>
 
       <p className="text-xs text-muted-foreground">
@@ -42,7 +42,7 @@ export function CartSummary({ subtotal, itemCount, onCheckout }: CartSummaryProp
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <Button onClick={handleCheckout} disabled={submitting || itemCount === 0}>
+      <Button onClick={handleCheckout} disabled={submitting || itemCount === 0} data-testid="cart-checkout-btn">
         {submitting ? "Procesando..." : "Finalizar compra"}
       </Button>
     </div>
