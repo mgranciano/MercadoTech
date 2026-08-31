@@ -54,11 +54,24 @@ se señala como desviación.
 - 4 errores de `any` en mcp/src/ resueltos (use of `unknown` type assertion).
 - 1 error en lib/ai/completion.ts resuelto (Hugging Face API response typing).
 
-### Cierre de sesión 5
+### Fase 5.7 — Reforzamiento de arquitectura: DTO ENFORCER (2026-08-31, extensión)
+
+**Contexto:** tras la auditoría de Fase 5.6, se identificó un patrón arquitectónico crítico que merecía ser explícito en CLAUDE.md: los componentes de React **nunca deben recibir tipos crudos de Supabase** (`Tables<'tabla'>`).
+
+**Construido:** 
+- **Nueva regla 6** agregada a la sección "Cinco reglas de independencia" en `CLAUDE.md`: **DTO ENFORCER**. Establece que componentes NO pueden importar `Tables<'...'> de `types/database.ts`; los services mapean a DTOs limpios en `types/<domain>.ts`; UI consume exclusivamente DTOs. Garantiza: (a) desacoplamiento del esquema de BD, (b) cambios de BD no rompen componentes, (c) servicios validan antes de presentación.
+- Documentación: la regla es autosuficiente y previene el antipatrón de "importar tipos de BD por rapidez".
+
+**Justificación:** protege la arquitectura de 6 sesiones contra degradación gradual. El patrón es simple pero la violación ocurre silenciosamente. Atrapar temprano.
+
+**Pendiente para sesión 6:** crear skill `mercadotech-dto-enforcer` que valide `grep -r "Tables<" components/ hooks/` devuelva vacío.
+
+### Cierre de sesión 5 (extendida)
 
 **Commits de cierre:**
 - `7a8ae9c` — `docs: add final MCP architecture and security audit for Fase 5.6`
 - `1aa78f1` — `fix: resolve TypeScript type errors in MCP and AI modules (Fase 5.6)`
+- (esta sesión) — `docs: add DTO ENFORCER rule to CLAUDE.md + extend Sesión 5 bitácora (Fase 5.7)`
 
 ---
 

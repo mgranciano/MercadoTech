@@ -66,6 +66,8 @@ UI (React) → Hooks → Services → Supabase (con RLS)
 
 5. **Tunables solo en `lib/constants/`.** Precios, límites de sesión, timeouts, modelos de IA: van en `lib/constants/` (versionado), nunca hardcodeados ni en .env.
 
+6. **DTO ENFORCER: Componentes React NUNCA usan tipos crudos de Supabase.** Los componentes NO pueden importar ni usar `Tables<'tabla'>` de `types/database.ts`. Es obligatorio que los **services mapeen las respuestas de la BD a DTOs limpios**, y que **la UI consuma exclusivamente esos DTOs**. Los DTOs viven en `types/<domain>.ts` (ej: `types/order.ts`, `types/product.ts`) como interfaces que transforman los tipos de Supabase. Esto asegura: (a) desacoplamiento del esquema de BD, (b) cambios de BD no rompen componentes, (c) servicios validan y transforman datos antes de presentación.
+
 ### Estructura real de `components/` y rutas (Sesión 3)
 
 - `components/`: `ui/` (shadcn), `shared/`, `layout/`, `auth/`, `catalog/`,
@@ -240,7 +242,8 @@ La Fase 2.1 implementó:
   arquitectura completada (Skills de validador automático + enforcer). Auditoría
   de seguridad en `mcp/AUDIT.md`: RLS, resiliencia, stdio aislado. Veredicto:
   listo para producción.
-- **Sesión 6 en adelante:** timeouts, rate limiting, tests de MCP, voz.
+- **Sesión 5 extendida (Fase 5.7):** DTO ENFORCER rule creada y agregada a CLAUDE.md (regla 6). Protege arquitectura contra degradación de capas. Skill de validación pendiente para sesión 6.
+- **Sesión 6 en adelante:** timeouts, rate limiting, tests de MCP, voz, DTO Enforcer skill validator.
 - Detalle completo: `docs/BITACORA.md` (bitácora acumulativa),
   `docs/SESION3_CHECKLIST.md` (pasada de calidad de la Fase 3.8),
   `docs/RAG.md` (flujo RAG, casos de prueba, calibración) y
