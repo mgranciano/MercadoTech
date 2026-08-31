@@ -8,7 +8,4 @@ export default defineConfig({
   sourcemap: true,
   shims: true,
   clean: true,
-  alias: {
-    '@': '../',
-  },
 })
