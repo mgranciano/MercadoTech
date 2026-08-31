@@ -47,7 +47,7 @@ export function ProductImage({
           className={`object-cover ${isLoading ? "animate-pulse" : ""}`}
           priority={priority}
           onError={() => setError(true)}
-          onLoadingComplete={() => setIsLoading(false)}
+          onLoad={() => setIsLoading(false)}
         />
       </div>
     )
