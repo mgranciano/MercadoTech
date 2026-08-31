@@ -12,19 +12,29 @@ MercadoTech es un marketplace de productos tecnológicos donde compradores naveg
 
 ## Comandos
 
-Scripts npm implementados (actualizados en Sesión 4):
+Scripts npm implementados (actualizados en Sesión 6):
 
 ```bash
-npm run dev          # Inicia dev server (Next.js, puerto 3000)
-npm run build        # Build para producción
-npm run start        # Inicia servidor de producción
-npm run lint         # Lint de código (ESLint)
-npm run type-check   # Verificación TypeScript strict (tsc --noEmit)
-npm run test         # Tests unitarios (Jest, por implementar)
-npm run test:e2e     # Tests e2e (Playwright, por implementar)
-npm run db:types     # Regenera types/database.ts desde el esquema local
+npm run dev               # Inicia dev server (Next.js, puerto 3000)
+npm run build             # Build para producción
+npm run start             # Inicia servidor de producción
+npm run lint              # Lint de código (ESLint)
+npm run type-check        # Verificación TypeScript strict (tsc --noEmit)
+npm run test              # Tests unitarios Vitest (201 tests, 70%+ cobertura servicios)
+npm run test:coverage     # Tests + coverage report (HTML en coverage/)
+npm run test:e2e          # Tests e2e Playwright (requiere: supabase start + npm run build && start)
+npm run db:types          # Regenera types/database.ts desde el esquema local
 npx tsx scripts/index-all.ts  # Reindexa todo el catálogo + FAQ en knowledge_embeddings (Sesión 4)
 ```
+
+**Prerequisitos para test:e2e:** `supabase start` debe estar corriendo (local ephemeral stack). Luego: `npm run build && npm run start` (para que Playwright corra contra producción local), o contra dev (`npm run dev` en otra terminal).
+
+**Gate de validación:** antes de commitear, correr:
+```bash
+npm run lint && npm run type-check && npm run test
+# Si supabase está verde: npm run test:e2e
+```
+Si alguno falla, no commits — revisar `docs/DEBUGGING.md` para diagnóstico.
 
 ---
 
@@ -173,6 +183,15 @@ grep -rl "lib/supabase/admin" app components hooks services | grep -v api/v1
 - **Degradación elegante (Lección 7):** si Supabase falla, recursos devuelven
   lista estática o error claro, nunca colapso cascada.
 
+### Convenciones aprendidas en Sesión 6
+
+- **Tests viven junto al archivo:** `.test.ts` adyacente (ej: `services/product.service.ts` → `services/product.service.test.ts`). Test file excluido de root `tsconfig.json` (tiene su propio contexto).
+- **Supabase nunca mocked con `vi.mock()`:** inyectable por parámetro en función (`getProductById(id, supabase = createClient())`). Razón: tests necesitan control fino sobre BD por caso; `vi.mock()` es rígido. Mock completo (`supabase-mock.ts`) con encadenamiento y métodos helper (`.calls()`, `.updates()`).
+- **Comportamiento real, no stubs vacíos:** tests anclan a respuestas concretas del mock (ej: precio como string desde PostgREST → convertido a number). Verifica transformaciones, no stubs sin sentido.
+- **Test IDs en kebab-case:** `nav-cart-link`, `shop-product-card`, `product-add-to-cart-btn` — CSS no, selectors de Playwright sí.
+- **E2E requiere `supabase start`:** stack local ephemeral, credenciales dinámicas (sin secrets hardcodeados). Fixtures mockan auth (localStorage), no login real.
+- **Ciclo de validación:** código → `npm run test` (unitarios) → `npm run test:e2e` (si Supabase verde) → validator skill (gate binario) → commit. Un test fallido tumba todo.
+
 ---
 
 ## Fuente de verdad de la base de datos
@@ -180,6 +199,15 @@ grep -rl "lib/supabase/admin" app components hooks services | grep -v api/v1
 - **Fuente de verdad:** `supabase/migrations/` (desde sesión 2)
 - **Copias de referencia:** `schema.sql` y `policies.sql` son snapshots solo informativos.
 - **Nunca alteres la DB a mano.** Cambios solo vía migrations.
+
+---
+
+## Lockfile y gestor de paquetes (desde Sesión 6)
+
+- **Campo obligatorio en `package.json`:** `"packageManager": "npm@11.6.2"`. Esto fuerza que Node.js y CI usen esa versión exacta.
+- **Por qué:** npm 11.6.2 genera `package-lock.json` v3+. Runners con npm 10.x fallan con "Missing from lock file" porque no entienden el nuevo formato. El pin evita sorpresas en CI.
+- **Nunca cambies a la ligera:** cambiar de npm 11.x → 12.x regenera el lockfile con un formato distinto. Esto es un cambio de infraestructura, no una actualización trivial. Comunicar al equipo.
+- **Regenerar:** `npm install -g npm@<version> && npm ci` (en local), commit el `package-lock.json` nuevo.
 
 ---
 
@@ -210,7 +238,9 @@ Si la respuesta a (2) es "adelanto", no lo hagas. Si a (1) es "sí", detente.
 - **Storage:** Supabase Storage (imágenes)
 - **AI:** Hugging Face Inference (embeddings + chat, sesión 4); voz en sesión 8
 - **MCP:** Model Context Protocol (servidor stdio, tools, resources, prompts, sesión 5+)
-- **Testing:** Playwright (e2e), Jest (unitarios)
+- **Testing:** Vitest (unitarios, 201 tests, 70%+ cobertura), Playwright (e2e, 11 tests buyer flow)
+- **CI/CD:** GitHub Actions (checks: lint/type-check/test, e2e: Playwright ephemeral Supabase)
+- **Secrets:** `.env.local` (desarrollo), GitHub Secrets (CI — a implementar sesión 7)
 
 ---
 
@@ -243,11 +273,11 @@ La Fase 2.1 implementó:
   de seguridad en `mcp/AUDIT.md`: RLS, resiliencia, stdio aislado. Veredicto:
   listo para producción.
 - **Sesión 5 extendida (Fase 5.7):** DTO ENFORCER rule creada y agregada a CLAUDE.md (regla 6). Protege arquitectura contra degradación de capas. Skill de validación pendiente para sesión 6.
-- **Sesión 6 en adelante:** timeouts, rate limiting, tests de MCP, voz, DTO Enforcer skill validator.
+- **Sesión 6:** Fases 6.1–6.8 construidas. Testing completo: Vitest (201 tests, 70%+ cobertura servicios), Playwright (11 E2E, buyer flow + negatives), GitHub Actions CI (checks + e2e, npm 11.6.2 pinning, credenciales dinámicas). Debugging runbook (`docs/DEBUGGING.md`) + validator actualizado (gate binario con tests). Cambio de alcance: Fase 7.1 (CI) absorbida en 6.7. CI verde. Main protegida.
+- **Sesión 7:** Performance + secretos + deploy (sin CI nuevamente — está hecho). Roadmap: timeouts, rate limiting, branch protection, tests de MCP, voz.
 - Detalle completo: `docs/BITACORA.md` (bitácora acumulativa),
-  `docs/SESION3_CHECKLIST.md` (pasada de calidad de la Fase 3.8),
-  `docs/RAG.md` (flujo RAG, casos de prueba, calibración) y
-  `mcp/AUDIT.md` (auditoría final de seguridad y arquitectura).
+  `docs/DEBUGGING.md` (runbook diagnostico), `docs/RAG.md` (flujo IA) y
+  `mcp/AUDIT.md` (auditoría MCP).
 
 ---
 
