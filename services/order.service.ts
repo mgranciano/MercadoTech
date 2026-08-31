@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/client"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "@/types/database"
 import type { Order, OrderItem, OrderWithItems } from "@/types/order"
+
+type Client = SupabaseClient<Database>
 
 interface OrderRow extends Order {
   order_items: OrderItem[]
