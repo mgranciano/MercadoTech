@@ -58,7 +58,7 @@ export default function OrderDetailPage() {
           <h1 className="text-2xl font-bold" data-testid="order-id">Pedido #{order.id.slice(0, 8)}</h1>
           <p className="text-sm text-muted-foreground">{formatDate(order.created_at)}</p>
         </div>
-        <div data-testid="order-status"><OrderStatusBadge status={order.status} />
+        <div data-testid="order-status"><OrderStatusBadge status={order.status} /></div>
       </div>
 
       <OrderItemsTable items={order.order_items} />
