@@ -43,13 +43,13 @@ export function Navbar({
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             <CategoriesMenu categories={categories} />
-            <CartIndicator count={cartCount} />
+            <CartIndicator count={cartCount} variant="desktop" />
             <UserMenu user={user} role={role} onLogout={onLogout} />
           </div>
 
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center gap-3">
-            <CartIndicator count={cartCount} />
+            <CartIndicator count={cartCount} variant="mobile" />
             <MobileNav categories={categories} />
           </div>
         </div>

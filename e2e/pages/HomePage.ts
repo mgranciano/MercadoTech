@@ -36,7 +36,7 @@ export class HomePage {
   }
 
   async openCart() {
-    await this.page.getByTestId('nav-cart-link').click()
+    await this.page.getByTestId('nav-cart-link-desktop').or(this.page.getByTestId('nav-cart-link-mobile')).first().click()
   }
 
   async openMyOrders() {

@@ -14,7 +14,10 @@ test.describe('Fase 6.5: Buyer Flow with Page Objects', () => {
 
     await test.step('Step 3: Click product and navigate', async () => {
       const product = page.locator('[data-testid^="shop-product-card-"]').first()
-      await product.click()
+      await Promise.all([
+        page.waitForNavigation(),
+        product.click()
+      ])
       expect(page.url()).toContain('/producto/')
     })
   })
@@ -22,7 +25,7 @@ test.describe('Fase 6.5: Buyer Flow with Page Objects', () => {
   test('test.step 4-5: Cart Navigation', async ({ page }) => {
     await test.step('Step 4-5: Navigate to cart', async () => {
       await page.goto('http://localhost:3000/')
-      const cartLink = page.getByTestId('nav-cart-link')
+      const cartLink = page.getByTestId('nav-cart-link-desktop').or(page.getByTestId('nav-cart-link-mobile')).first()
       await cartLink.click()
 
       // Either we see cart container or empty message
@@ -40,7 +43,7 @@ test.describe('Fase 6.5: Buyer Flow with Page Objects', () => {
 
       // Verify navbar testids
       await expect(page.getByTestId('nav-home-link')).toBeVisible()
-      await expect(page.getByTestId('nav-cart-link')).toBeVisible()
+      await expect(page.getByTestId('nav-cart-link-desktop').or(page.getByTestId('nav-cart-link-mobile')).first()).toBeVisible()
 
       // Verify user menu testid (when logged in)
       const userMenu = page.getByTestId('nav-user-menu')

@@ -72,7 +72,7 @@ test.describe('Buyer Negative Cases', () => {
 
       // Verify navbar testids are present for all users
       const navHome = page.getByTestId('nav-home-link')
-      const navCart = page.getByTestId('nav-cart-link')
+      const navCart = page.getByTestId('nav-cart-link-desktop').or(page.getByTestId('nav-cart-link-mobile')).first()
 
       await expect(navHome).toBeVisible()
       await expect(navCart).toBeVisible()
