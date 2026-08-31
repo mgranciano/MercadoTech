@@ -1,5 +1,8 @@
 // Utilidades de seguridad: validación de entrada, sanitización, límites.
 
+import type { ToolResultContent } from './tool-result.js'
+import { errorResult } from './tool-result.js'
+
 export function validateString(
   value: unknown,
   name: string,
@@ -42,4 +45,19 @@ export function validateNumber(
   }
 
   return num
+}
+
+// Envoltura de seguridad: convierte excepciones de funciones de herramientas
+// en ToolResultContent de error.
+export function safe<T>(
+  handler: (input: T) => Promise<ToolResultContent>
+): (input: T) => Promise<ToolResultContent> {
+  return async (input: T) => {
+    try {
+      return await handler(input)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return errorResult(message)
+    }
+  }
 }
