@@ -17,6 +17,7 @@ export function ProductCard({ product, similarity }: ProductCardProps) {
     <Link
       href={`/producto/${product.id}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition duration-200 hover:-translate-y-1 hover:border-ai-cyan hover:shadow-[0_16px_34px_rgba(12,26,56,.14)]"
+      data-testid={`shop-product-card-${product.id}`}
     >
       <div className="relative h-[170px] w-full overflow-hidden bg-muted">
         {product.image_url ? (
