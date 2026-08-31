@@ -35,7 +35,8 @@ observaciones".
 - [ ] `npm run lint` (desde `mercadotech/`) → exit 0. Si no, FALLIDA (pegar el error).
 - [ ] `npm run type-check` (desde `mercadotech/`) → exit 0. Si no, FALLIDA (pegar el error).
 - [ ] Si existe `mcp/src/` (Fase 5.2 en adelante): `npm run type-check` dentro de `mcp/` → exit 0. Si `mcp/src/` todavía no existe, este ítem se omite (no cuenta ni a favor ni en contra).
-- [ ] `npm run test` — **desde la sesión 6**. No existe todavía; este ítem se omite y se anota como "N/A — llega en sesión 6", nunca como fallo.
+- [ ] `npm run test` (desde `mercadotech/`) → exit 0. Si no, FALLIDA (pegar el error). Desde Sesión 6.
+- [ ] Si `supabase status` muestra todos los servicios en verde (API, DB, Storage, Auth): `npm run test:e2e` (desde `mercadotech/`) → exit 0. Si Supabase está en rojo, este ítem se omite ("N/A — Supabase offline"). Si está verde pero E2E falla, FALLIDA (pegar el error).
 
 ## Formato de salida
 
