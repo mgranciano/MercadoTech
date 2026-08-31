@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest'
 import { validateStatusTransition } from './useSellerOrders'
 import { ORDER_STATUS_FLOW } from '@/lib/constants/orders'

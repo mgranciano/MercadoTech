@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest'
 import { validateProduct, type ProductFormValues } from './product'
 import { TITLE_MIN, TITLE_MAX, MAX_IMAGES_PER_PRODUCT } from '@/lib/constants/product'
