@@ -1,9 +1,6 @@
-import { resolve } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = __filename.split('/').slice(0, -2).join('/')
-const envPath = resolve(__dirname, '.env.local')
+const envPath = join(process.cwd(), '.env.local')
 
 // Carga .env.local desde la raíz del proyecto (mercadotech/).
 // El servidor MCP corre como script independiente, no en Next.js,
