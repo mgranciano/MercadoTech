@@ -52,7 +52,7 @@ export function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(230px,1fr))] sm:gap-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(230px,1fr))] sm:gap-4" data-testid="shop-product-grid">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} similarity={product.similarity} />
       ))}

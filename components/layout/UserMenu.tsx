@@ -25,7 +25,7 @@ export function UserMenu({ user, role, onLogout, className }: UserMenuProps) {
   }
 
   return (
-    <div className={cn("relative group", className)}>
+    <div className={cn("relative group", className)} data-testid="nav-user-menu">
       <Button variant="ghost" className="gap-2">
         <User size={18} />
         <span className="max-w-[100px] truncate">{user.display_name || "Usuario"}</span>
@@ -39,6 +39,7 @@ export function UserMenu({ user, role, onLogout, className }: UserMenuProps) {
           <Link
             href="/pedidos"
             className="flex gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
+            data-testid="nav-orders-link"
           >
             <Package size={16} />
             Mis pedidos
@@ -72,6 +73,7 @@ export function UserMenu({ user, role, onLogout, className }: UserMenuProps) {
             <Link
               href="/vendedor/productos"
               className="flex gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors border-t"
+              data-testid="nav-seller-link"
             >
               <Store size={16} />
               Panel vendedor
@@ -81,6 +83,7 @@ export function UserMenu({ user, role, onLogout, className }: UserMenuProps) {
           <button
             onClick={onLogout}
             className="w-full flex gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors border-t text-destructive hover:text-destructive"
+            data-testid="nav-logout-btn"
           >
             <LogOut size={16} />
             Cerrar sesión
