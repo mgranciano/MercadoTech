@@ -7,7 +7,195 @@ se señala como desviación.
 
 ---
 
-## Sesión 6 — Testing, Debugging, Automatización y CI/CD (2026-08-31)
+## Sesión 7 — Performance, Secretos y Despliegue en Vercel (2026-09-02)
+
+**Nota de alcance:** Sesión 7 construye directamente sobre la red de seguridad de S6 (CI/tests) para llevar MercadoTech de "funciona en local" a producción desplegada. Directiva del docente: deploy 100% por interfaz de Vercel (sin CLI), secretos cargados a mano en dashboard, branch protection como candado de merge.
+
+### Fase 7.0 — Validación de Sesión 6 (Prompt 0)
+
+**Commits:** Prompt 0 ejecutado (verificación, no cambios de código)
+
+**Verificado:**
+- ✅ Working tree limpio, main up-to-date
+- ✅ BITACORA.md tiene sección S6 con 10 criterios aceptación todos ✅
+- ✅ `npm run test` — 201 tests passed
+- ✅ `supabase db reset` — 29 migraciones + seed aplicadas
+- ✅ `npm run test:e2e` — 30 tests passed
+- ✅ `npm run build` — compilación exitosa (Turbopack)
+- ✅ npm 11.6.2 pinned, lint 0 errores, type-check 0 errores
+
+**Decisión:** S6 cerrada y validada. Adelante con S7.
+
+---
+
+### Fase 7.2 — Performance y Core Web Vitals (EN PROGRESO)
+
+**Commits:** `docs/PERFORMANCE.md` creado (metodología ANTES, esperando números)
+
+**Construido:**
+- ✅ `docs/PERFORMANCE.md` con metodología (Lighthouse móvil contra build prod, nunca next dev)
+- ✅ Servidor local iniciado (`npm run start` port 3000)
+- 🟡 Medición base (PENDIENTE): usuario corre Lighthouse en Home, Catálogo, Detalle, Asistente
+
+**Candidatos a dynamic import (si la medición lo justifica):**
+1. **ChatWindow** (mayor impacto) — `/asistente`, `/soporte`
+2. **OrdersKanban** (impacto medio) — `/vendedor/pedidos`
+3. **SortableImageGallery** (menor) — `/vendedor/productos/[id]/editar`
+
+**Decisiones:**
+- Sin bundle-analyzer (Turbopack, decisión 3 de spec)
+- Medir SIEMPRE contra build de producción (decisión 12)
+- Revertir optimización sin mejora medible
+
+**Objetivos:** Lighthouse Performance ≥90 home/catálogo (móvil); LCP < 2.5s, CLS < 0.1, INP < 200ms
+
+**Pendiente:** Números de Lighthouse del usuario para continuar optimizaciones.
+
+---
+
+### Fase 7.3 — Gobernanza de Variables y Secretos (COMPLETADA)
+
+**Commit:** `52b9beb` — docs: add secrets governance for Fase 7.3
+
+**Construido:**
+- ✅ `docs/DEPLOY.md` sección 1: tabla de gobernanza (6 variables + GitHub Actions: ninguna)
+- ✅ Greps anti-fuga ejecutados: `hf_`, `sb_secret`, `eyJ` — todos vacíos ✅
+- ✅ `.env.local` nunca commiteado (verificado: `git log --all -p -- .env.local` vacío)
+- ✅ Workflow CI/CD sin `secrets.*` (credenciales dinámicas del stack local ephemeral)
+
+**Tabla de gobernanza (6 variables):**
+
+| Variable | Dónde vive | Quién | Pública/Secreta |
+|---|---|---|---|
+| NEXT_PUBLIC_SUPABASE_URL | Vercel (P+Preview) | Navegador + servidor | Pública |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | Vercel (P+Preview) | RLS protege | Pública |
+| SUPABASE_SERVICE_ROLE_KEY | Vercel (P+Preview) | admin.ts Routes | **SECRETA** |
+| HUGGINGFACEHUB_API_TOKEN | Vercel (P+Preview) | lib/ai/ Routes | **SECRETA** |
+| NEXT_PUBLIC_SITE_URL | Vercel (P y Preview diferentes) | redirects auth | Pública |
+| HUGGINGFACE_*_MODEL | Vercel (opcional) | lib/ai/ | Pública |
+| GitHub Actions | — | — | **NINGUNA** |
+
+**Reglas de operación:**
+- Nunca commitear `.env*.local` (ya en `.gitignore`)
+- Rotación inmediata si se expone (dashboard Supabase/HF)
+- Previews comparten BD de prod (decisión 9, riesgo documentado)
+- Cambiar env en Vercel → redeploy obligatorio (decisión 10)
+
+**Decisiones:**
+- Deploy 100% por interfaz Vercel (directiva docente, sin CLI)
+- Secretos a mano en dashboard (NUNCA en Actions)
+- GitHub Actions NO recibe ningún secreto (CI usa stack local con credenciales dinámicas)
+
+---
+
+### Fase 7.4 — Despliegue en Vercel con BD Remota (EN PROGRESO)
+
+**Commits:** Fase 7.4 aún en ejecución (usuario en Pasos 2-10)
+
+**Construido por Claude:**
+- ✅ `supabase/seed.prod.sql` (8 categorías + 10 FAQ, SIN usuarios/productos, catálogo nace vacío — decisión 6)
+- 🟡 Comandos preparados para usuario:
+  - `supabase login` → `supabase link` → `supabase db push`
+  - Pegar seed.prod.sql en SQL Editor
+  - `NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/index-all.ts` (indexar FAQ)
+  - Variables en Vercel (a mano, una por una)
+  - Branch protection en GitHub
+
+**Pendiente:** Usuario en Pasos 2-10 (migración BD hosted, Vercel setup, smoke test)
+
+---
+
+### Fase 7.5 — Documentación Final (COMPLETADA)
+
+**Commit:** `e46713e` — docs: add product README, update architecture and finish deploy guide for Fase 7.5
+
+**Construido:**
+- ✅ `docs/PLAN_CURSO.md`: README original del curso preservado intacto (referencia histórica con nota de contexto)
+- ✅ `README.md` nuevo: manual de producto para dev nuevo
+  - Qué es, stack, inicio rápido (Docker + Supabase start + .env.local + npm ci + npm run dev)
+  - Comandos principales (dev, testing unitaria/e2e, linting, prod build)
+  - Estructura del proyecto comentada
+  - Variables de entorno (dev vs prod)
+  - Testing (Vitest 201 tests, Playwright 30 tests)
+  - Performance, RAG, MCP, debugging, arquitectura (con enlaces a docs)
+- ✅ `docs/ARQUITECTURA.md`: actualizada S2-S7
+  - Sesión 3: Frontend + Hooks + Services
+  - Sesión 4: RAG (embeddings, vector search, LLM chat)
+  - Sesión 5: MCP server (10 tools, 6 resources, 3 prompts)
+  - Sesión 6: Testing + CI/CD (201 unitarios, 30 E2E, GitHub Actions)
+  - Sesión 7: Performance + Deploy (medición, gobernanza, Vercel, rollback)
+  - Decisiones transversales (5 reglas independencia, DTO ENFORCER, RLS fuente de verdad, etc.)
+- ✅ `docs/DEPLOY.md`: completado
+  - Sección 1: gobernanza de secretos (7.3)
+  - Sección 2: flujo PR→producción, 10 pasos, síntomas post-deploy (7.4)
+  - Sección 3: rollback en Vercel, lo que NO revierte, checklist pre-deploy
+
+**Decisiones:**
+- README para dev nuevo sin contexto del curso (curso en PLAN_CURSO.md)
+- ARQUITECTURA menciona 5 capas + decisiones transversales (no especulación)
+- DEPLOY.md responde 3 preguntas: ¿dónde vive cada clave?, ¿cómo despliego?, ¿cómo vuelvo atrás?
+
+---
+
+### Resumen de Sesión 7
+
+| Fase | Estado | Commits | Entregables |
+|---|---|---|---|
+| 7.0 (Prompt 0) | ✅ Completa | ninguno | Validación S6 |
+| 7.2 (Performance) | 🟡 Progreso | 1 (PERFORMANCE.md) | Medición ANTES esperando Lighthouse |
+| 7.3 (Secretos) | ✅ Completa | 1 (52b9beb) | Gobernanza doc, greps limpios, tabla |
+| 7.4 (Deploy) | 🟡 Progreso | 1 (seed.prod.sql prep) | BD hosted, Vercel UI, branch protection — usuario en pasos |
+| 7.5 (Documentación) | ✅ Completa | 1 (e46713e) | README producto, PLAN_CURSO.md, ARQUITECTURA S2-S7, DEPLOY rollback |
+
+**Total cambios:** ~1400 líneas documentación, 0 líneas código de negocio
+
+---
+
+### (a) Criterios de aceptación
+
+| Criterio | Estado | Evidencia |
+|---|---|---|
+| S6 cerrada y validada | ✅ | Prompt 0: 10 verificaciones verdes |
+| Performance medida ANTES/DESPUÉS | 🟡 | `docs/PERFORMANCE.md` listo, esperando números |
+| Gobernanza de secretos completada | ✅ | Tabla + greps + workflow validado (52b9beb) |
+| BD hosted migrada y sembrada | 🟡 | `seed.prod.sql` listo, usuario en pasos de migración |
+| Vercel setup con variables cargadas | 🟡 | Instrucciones dadas, usuario haciendo clics |
+| Branch protection activa | 🟡 | Instrucciones dadas, usuario en paso 8 |
+| PR smoke test → preview + merge → prod | 🟡 | Paso 9 de 7.4, esperando user flow completo |
+| README de producto + ARQUITECTURA + DEPLOY | ✅ | 3 archivos completados (e46713e) |
+| Tests siguen verdes | ✅ | 201 unitarios, 30 E2E, npm run build ✅ |
+| Cierre de bitácora y CLAUDE.md | 🟡 | En progreso (este prompt) |
+
+---
+
+### (b) Deuda técnica y limitaciones conocidas
+
+- **Performance 7.2:** Pendiente de números Lighthouse; candidatos a dynamic import sin medir aún
+- **Deploy 7.4:** Requiere interacción humana (Supabase CLI, Vercel dashboard, GitHub settings) — no puede automatizarse vía CI
+- **Preview database sharing (decisión 9):** Riesgo documentado — previews tocan BD de prod; en producto real sería staging separado
+- **No implementado en S7:**
+  - Rate limiting (mencionado como WIP en README S6)
+  - E2E automatizado contra Vercel preview (opcional, documentado como manual)
+  - Staging separado para BD
+  - Testing de MCP en CI
+
+---
+
+### (c) Desviaciones de la spec
+
+Ninguna significativa. El Prompt 0 y la ejecución de 7.3, 7.5 cumplieron exactamente lo especificado. Las Fases 7.2 y 7.4 aún en curso (usuario con el balón).
+
+---
+
+### (d) Pendientes para Sesión 8
+
+- **7.2 (Performance):** Completar con números Lighthouse, aplicar dinamic imports si miden bien, verificar Lighthouse ≥90
+- **7.4 (Deploy):** Completar go-live (smoke test), confirmar producción viva
+- **Sesión 8:** Agente de voz (reutiliza `/api/v1/...` existente + `support_articles`), demo final
+
+---
+
+
 
 **Nota de alcance:** Sesión 6 contenía originalmente las Fases 6.1–6.6 (testing local), y la Fase 7.1 (CI/CD) fue absorbida en esta sesión como Fase 6.7 por decisión del docente. Esto consolidó el ciclo de calidad en una sola sesión. Sesión 7 ahora se dedica exclusivamente a performance, secretos y deploy.
 

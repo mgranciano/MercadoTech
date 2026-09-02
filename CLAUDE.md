@@ -273,10 +273,19 @@ La Fase 2.1 implementó:
   de seguridad en `mcp/AUDIT.md`: RLS, resiliencia, stdio aislado. Veredicto:
   listo para producción.
 - **Sesión 5 extendida (Fase 5.7):** DTO ENFORCER rule creada y agregada a CLAUDE.md (regla 6). Protege arquitectura contra degradación de capas. Skill de validación pendiente para sesión 6.
-- **Sesión 6:** Fases 6.1–6.8 construidas. Testing completo: Vitest (201 tests, 70%+ cobertura servicios), Playwright (11 E2E, buyer flow + negatives), GitHub Actions CI (checks + e2e, npm 11.6.2 pinning, credenciales dinámicas). Debugging runbook (`docs/DEBUGGING.md`) + validator actualizado (gate binario con tests). Cambio de alcance: Fase 7.1 (CI) absorbida en 6.7. CI verde. Main protegida.
-- **Sesión 7:** Performance + secretos + deploy (sin CI nuevamente — está hecho). Roadmap: timeouts, rate limiting, branch protection, tests de MCP, voz.
+- **Sesión 6:** Fases 6.1–6.8 construidas. Testing completo: Vitest (201 tests, 70%+ cobertura servicios), Playwright (30 E2E, buyer flow + negatives), GitHub Actions CI (checks + e2e, npm 11.6.2 pinning, credenciales dinámicas). Debugging runbook (`docs/DEBUGGING.md`) + validator (gate binario con tests). CI verde. Main protegida.
+- **Sesión 7 (en progreso):** Fases 7.0–7.5 en ejecución:
+  - 7.0: Validación de S6 ✅ (Prompt 0)
+  - 7.2: Performance + Core Web Vitals 🟡 (medición base esperando Lighthouse)
+  - 7.3: Gobernanza de secretos ✅ (tabla, greps anti-fuga, workflow sin secrets)
+  - 7.4: Despliegue en Vercel 🟡 (BD hosted, seed.prod.sql, usuario en pasos)
+  - 7.5: Documentación final ✅ (README producto, PLAN_CURSO.md, ARQUITECTURA S2-S7, DEPLOY rollback)
+  - **Directiva del docente:** Deploy 100% por interfaz Vercel (sin CLI); secretos a mano en dashboard (cero en Actions); branch protection como candado de merge
+  - **URL de producción:** (completarse cuando 7.4 termine)
+  - **README nuevo:** `README.md` es ahora manual de producto (dev nuevo levanta desde ahí); plan del curso en `docs/PLAN_CURSO.md`
 - Detalle completo: `docs/BITACORA.md` (bitácora acumulativa),
-  `docs/DEBUGGING.md` (runbook diagnostico), `docs/RAG.md` (flujo IA) y
+  `docs/DEBUGGING.md` (runbook diagnostico), `docs/RAG.md` (flujo IA),
+  `docs/DEPLOY.md` (variables, flujo, rollback), `docs/PERFORMANCE.md` (mediciones),
   `mcp/AUDIT.md` (auditoría MCP).
 
 ---
@@ -324,7 +333,7 @@ grep -rl "\.admin" mcp/src/tools mcp/src/resources mcp/src/prompts
 
 ---
 
-*Última actualización: Sesión 5 (cierre)*
+*Última actualización: Sesión 7 (en progreso, fases 7.0/7.3/7.5 completas; 7.2/7.4 en curso)*
 
 <!-- BEGIN:nextjs-agent-rules -->
 
