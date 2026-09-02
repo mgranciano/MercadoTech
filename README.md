@@ -1,432 +1,392 @@
-# MercadoTech — Marketplace Tecnológico con IA
+# MercadoTech — Marketplace Tecnológico
 
-![Next.js](https://img.shields.io/badge/Next.js-16.3-black?style=flat-square)
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)
-![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square)
-![Tests](https://img.shields.io/badge/Tests-201-green?style=flat-square)
+**Tienda online de productos tecnológicos con búsqueda impulsada por IA y asistente de soporte.**
+
+🔗 **URL de Producción:** *(se completará en Fase 7.4)* 
 
 ---
 
-## Descripción
+## ¿Qué es MercadoTech?
 
-**MercadoTech** es un marketplace de productos tecnológicos donde compradores navegan catálogos, buscan por inteligencia artificial (RAG), ven detalles con galerías de imágenes, leen reseñas y preguntas frecuentes, agregan al carrito y completan un checkout simulado. Vendedores publican productos y gestionan pedidos. Un asistente de soporte con IA responde preguntas en tiempo real basadas en FAQ y conocimiento de productos.
+MercadoTech es un marketplace donde:
 
-**No hay pasarela de pago real** — el checkout es una simulación educativa.
+- **Compradores** exploran productos tecnológicos, buscan con IA (ej: "laptop ligera"), leen reseñas, agregan al carrito y simulan compra
+- **Vendedores** publican productos con imágenes, gestionan pedidos en un tablero Kanban
+- **Asistente de IA** responde preguntas sobre envíos, pagos, devoluciones citando la FAQ en tiempo real
+- **Base de datos** protegida con RLS (Row-Level Security), búsqueda semántica con embeddings, autenticación JWT
 
----
-
-## Características
-
-### 🛍️ Para Compradores
-
-- **Catálogo explorable** con categorías, filtros por precio, condición y características
-- **Búsqueda semántica** impulsada por IA (busca "laptop liviana" y encuentra MacBooks)
-- **Detalles de producto** con galería de imágenes, reseñas con rating, Q&A comunitario
-- **Carrito inteligente** con actualizaciones en tiempo real y sincronización
-- **Historial de órdenes** con estados (pendiente, pagado, enviado, entregado, cancelado)
-- **Favoritos** para guardar productos de interés
-- **Asistente de soporte** que responde preguntas sobre políticas de devolución, envíos, etc.
-
-### 🏪 Para Vendedores
-
-- **Panel de control** con gestión de productos activos/inactivos
-- **Publicación de productos** con imágenes, descripción, precio, stock
-- **Gestión de pedidos** (kanban por estado, transiciones validadas)
-- **Reindexación automática** de productos para búsqueda semántica
-
-### 🤖 IA y RAG
-
-- **Sistema RAG completo**: productos y artículos de soporte se indexan en embeddings (384D, Hugging Face)
-- **Búsqueda semántica**: encuentra productos incluso con consultas en lenguaje natural
-- **Respuestas generadas**: el asistente redacta respuestas citando fuentes reales (productos/artículos)
-- **Contexto dinámico**: cada consulta recupera las fichas más relevantes antes de generar
-
-### 📊 Testing & CI/CD
-
-- **201 tests unitarios** (70%+ cobertura de servicios) con Vitest
-- **11 tests E2E** (buyer flow completo) con Playwright
-- **GitHub Actions CI/CD**: checks (lint, type-check, test) + E2E contra Supabase ephemeral
-- **Validator automático**: gate binario — un test fallido bloquea el merge
-
----
-
-## Arquitectura
-
-```
-┌────────────────────────────────────────────────────────┐
-│                    FRONTEND (Next.js)                  │
-│  Componentes React | Custom Hooks | TypeScript strict  │
-└────────────────────────┬─────────────────────────────┘
-                         │
-                         ↓
-┌────────────────────────────────────────────────────────┐
-│              SERVICES (Lógica de negocio)              │
-│  products | orders | cart | chat | vector-search      │
-│  storage | auth | seller | reviews | questions        │
-└────────────────────────┬─────────────────────────────┘
-                         │
-        ┌────────────────┼────────────────┬───────────┐
-        │                │                │           │
-        ↓                ↓                ↓           ↓
-    ┌─────────┐  ┌─────────────┐  ┌──────────────┐  ┌─────┐
-    │Supabase │  │ Hugging Face│  │ Storage      │  │ Auth│
-    │PostgreSQL  Embeddings+Chat  Images (CDN)    │ (JWT)│
-    └─────────┘  └─────────────┘  └──────────────┘  └─────┘
-```
-
-### Flujo de Datos
-
-```
-UI (React) → Hooks → Services → Supabase (con RLS)
-                   ↘         ↙
-                  Hugging Face
-                  (embeddings + chat)
-```
-
-### Componentes Clave
-
-| Componente | Responsabilidad |
-|---|---|
-| **Frontend (Next.js 16)** | Rutas App Router, páginas, componentes React, autenticación cliente |
-| **API Routes (`app/api/v1/`)** | Endpoints para chat, búsqueda semántica, reindex de embeddings |
-| **Services** | Lógica de negocio aislada (productos, órdenes, IA, storage) |
-| **Supabase** | PostgreSQL + RLS + Auth + Storage + Realtime |
-| **Hugging Face** | Embeddings (sentence-transformers) + Chat (Llama-2 vía API) |
-| **MCP Server** | Model Context Protocol para integración con clientes/agentes |
+**No hay procesamiento de pagos real** — el checkout es simulado para fines educativos.
 
 ---
 
 ## Tecnologías
 
-| Aspecto | Tecnología | Versión |
-|---|---|---|
-| **Runtime/Frontend** | Next.js | 16.3 |
-| **Librería UI** | React | 19 |
-| **Lenguaje** | TypeScript | 5 |
-| **Estilos** | Tailwind CSS | 4 |
-| **UI Components** | shadcn/ui (Radix) | 2.x |
-| **Database** | PostgreSQL (Supabase) | 15+ |
-| **Auth** | Supabase Auth (JWT) | — |
-| **Storage** | Supabase Storage (S3-compatible) | — |
-| **Embeddings** | Hugging Face (sentence-transformers) | 384D |
-| **LLM Chat** | Hugging Face (Llama-2-7b-chat) | — |
-| **Testing** | Vitest + Playwright | 4.1 / 1.62 |
-| **Linting** | ESLint | 9 |
-| **CI/CD** | GitHub Actions | — |
-| **MCP Server** | @modelcontextprotocol/sdk | — |
+| Aspecto | Herramienta |
+|---|---|
+| Frontend | Next.js 16 + React 19 + TypeScript 5 |
+| Estilos | Tailwind CSS + shadcn/ui |
+| Base de datos | Supabase (PostgreSQL + RLS + Auth) |
+| Búsqueda semántica | Hugging Face (embeddings 384D) |
+| IA generativa | Hugging Face Inference (chat) |
+| Testing | Vitest (unitarios) + Playwright (E2E) |
+| CI/CD | GitHub Actions |
+| Deploy | Vercel |
 
 ---
 
-## Instalación
+## Inicio Rápido (Desarrollo Local)
 
-### Requisitos Previos
+### Requisitos
 
-- **Node.js** 20+ (recomendado 22+)
-- **npm** 11.6.2 (pinned en `packageManager` de `package.json`)
-- **Supabase CLI** (para trabajar con la BD local)
+- **Node.js** 22+ y **npm** 11.6.2
+- **Docker Desktop** (para Supabase local)
 - **Git**
 
 ### Pasos
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/mgranciano/MercadoTech.git
-cd MercadoTech
+# 1. Clonar repositorio
+git clone https://github.com/growlearnjo/mercadotech.git
+cd mercadotech
 
-# 2. Instalar dependencias (root + MCP)
+# 2. Instalar dependencias
 npm ci
 cd mcp && npm ci && cd ..
 
 # 3. Copiar variables de entorno
-cp .env.local.example .env.local
+cp .env.example .env.local
 
-# 4. Levantar stack local de Supabase
+# 4. Iniciar Supabase local (requiere Docker)
 supabase start
 
-# 5. Regenerar tipos de la BD
-npm run db:types
+# 5. Ejecutar migraciones + seed
+supabase db reset
 
-# 6. Verificar instalación
-npm run type-check && npm run lint && npm run test
-```
+# 6. Completar .env.local con credenciales de Supabase local
+# (El comando anterior mostrará: API_URL, ANON_KEY, SERVICE_ROLE_KEY)
+# Cópialas en .env.local
 
----
+# 7. Instalar Supabase CLI si no lo tienes
+npm install -g supabase
 
-## Variables de Entorno
-
-### `.env.local` (desarrollo local)
-
-```bash
-# Supabase (se obtiene del output de `supabase start`)
-NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-
-# Hugging Face API (requerido para IA)
-HUGGINGFACE_API_KEY=hf_...
-
-# Opcional: override de modelos
-HUGGINGFACE_CHAT_MODEL=meta-llama/Llama-2-7b-chat-hf
-HUGGINGFACE_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-```
-
-### Variables sensibles (producción)
-
-En producción, estos valores se inyectan vía GitHub Secrets o variables de entorno del host (Vercel, Railway, etc.). **Nunca commiteás `.env.local`** — está en `.gitignore`.
-
----
-
-## Ejecución Local
-
-### Desarrollo
-
-```bash
-# Terminal 1: Supabase local
-supabase start
-
-# Terminal 2: Next.js dev server
+# 8. Levantar app en desarrollo
 npm run dev
-# Accesible en http://localhost:3000
-```
-
-### Testing
-
-```bash
-# Tests unitarios (Vitest)
-npm run test
-
-# Tests con cobertura
-npm run test:coverage
-
-# Tests E2E (Playwright, requiere: npm run build && npm run start en otra terminal)
-npm run test:e2e
-
-# Tests E2E en modo watch
-npm run test:watch
-```
-
-### Linting y Type-checking
-
-```bash
-# Verificar tipos TypeScript (root + mcp/)
-npm run type-check
-
-# Lint de código (ESLint)
-npm run lint
-
-# Build de producción
-npm run build
-npm run start
+# Abierto en http://localhost:3000
 ```
 
 ---
 
-## Despliegue
-
-### Deploy a Vercel (recomendado)
+## Comandos Principales
 
 ```bash
-# 1. Conectar repo a Vercel vía CLI o dashboard
-vercel link
+# Desarrollo
+npm run dev              # Servidor local con hot reload
 
-# 2. Agregar variables de entorno en Vercel
-# NEXT_PUBLIC_SUPABASE_URL
-# NEXT_PUBLIC_SUPABASE_ANON_KEY
-# HUGGINGFACE_API_KEY
+# Testing
+npm run test             # Tests unitarios (201 tests)
+npm run test:coverage    # Coverage report (HTML)
+npm run test:e2e         # E2E Playwright (requiere: npm run build && npm run start)
+npm run test:watch       # Watch mode tests
 
-# 3. Deploy automático en cada push a main
-vercel deploy --prod
+# Verificación
+npm run lint             # ESLint
+npm run type-check       # TypeScript strict
+npm run build            # Build de producción
+
+# Producción local
+npm run build
+npm run start            # Servidor prod en localhost:3000
+
+# Base de datos
+npm run db:types         # Regenerar types/database.ts desde Supabase
+supabase db reset        # Reiniciar BD local + migraciones + seed
+supabase start           # Iniciar stack Supabase local
+supabase stop            # Detener Supabase
+
+# IA (Re-indexación)
+npx tsx scripts/index-all.ts  # Reindexa productos + FAQ en embeddings
 ```
-
-### Deploy a Railway / Render
-
-1. Conectar repositorio GitHub
-2. Configurar variables de entorno (las mismas de `.env.local`)
-3. Seleccionar `Node.js` como runtime
-4. Build command: `npm run build`
-5. Start command: `npm run start`
-
-### Consideraciones de Producción
-
-- **Supabase:** usar un proyecto remoto (no ephemeral local)
-- **Hugging Face API:** el token va en GitHub Secrets (no en el código)
-- **Rate limiting:** implementar timeouts y límites por IP en production (WIP sesión 7)
-- **Logging:** configurar observabilidad (logs, traces, métricas)
-- **CORS:** solo dominios permitidos en política de CORS de Supabase
 
 ---
 
 ## Estructura del Proyecto
 
-### Carpetas principales
-
-| Carpeta | Responsabilidad | Contenido |
-|---|---|---|
-| **`app/`** | Rutas Next.js App Router | `(auth)` login/registro, `(shop)` catálogo/carrito/órdenes, `(seller)` panel vendedor, `api/v1/` endpoints |
-| **`components/`** | Componentes React reutilizables | `ui/` (shadcn), `shared/` (comunes), `catalog/` (catálogo), `product/` (detalle), `cart/` (carrito), `orders/` (órdenes), `seller/` (panel), `auth/` (login), `support/` (soporte), `chat/` (asistente), `layout/` (navbar, footer) |
-| **`hooks/`** | Custom React hooks | `useProducts`, `useCart`, `useAuth`, `useChat`, `useOrders`, `useSellerOrders`, `useFavorites`, `useQuestions`, `useReviews`, etc. |
-| **`services/`** | Lógica de negocio (sin React) | `products.service`, `orders.service`, `cart.service`, `chat.service`, `vector-search.service`, `storage.service`, `auth.service`, `seller.service`, etc. |
-| **`lib/`** | Configuraciones compartidas | `supabase/` (clientes), `ai/` (embeddings, chat, context), `constants/` (tunables), `utils.ts`, `validators/` (Zod) |
-| **`types/`** | Tipos TypeScript | `database.ts` (generado), `product.ts`, `order.ts`, `user.ts`, DTOs |
-| **`supabase/`** | BD y migraciones | `migrations/` (20+ migraciones), `seed.sql` (datos de prueba) |
-| **`public/`** | Recursos estáticos | `favicon.ico` |
-| **`mcp/`** | Servidor Model Context Protocol | `src/tools/` (10 read-only tools), `resources/` (6 dinámicos), `prompts/` (3 templates) |
-| **`e2e/`** | Tests end-to-end Playwright | `fixtures/` (autenticación mock), `pages/` (page objects), `tests/` (suites buyer), `data/` (test users) |
-| **`.github/`** | Configuración CI/CD | `workflows/ci.yml` (checks + e2e) |
-
-### Archivos de configuración
-
-| Archivo | Propósito |
-|---|---|
-| `package.json` | Scripts, dependencias, pinning npm@11.6.2 |
-| `next.config.ts` | Configuración Next.js (imágenes remotas, optimizaciones) |
-| `tsconfig.json` | TypeScript strict mode, rutas alias (`@/`) |
-| `tailwind.config.ts` | Tema Tailwind CSS |
-| `vitest.config.ts` | Configuración de tests unitarios |
-| `playwright.config.ts` | Configuración E2E |
-| `eslint.config.js` | Reglas de linting |
-| `.env.local` | Variables de entorno (no commiteado) |
-| `CLAUDE.md` | Convenciones y arquitectura del proyecto |
-
----
-
-## API
-
-### Endpoints principales (`app/api/v1/`)
-
-| Endpoint | Método | Propósito |
-|---|---|---|
-| `/chat` | POST | Consultas al asistente de soporte (RAG) |
-| `/search/semantic` | POST | Búsqueda semántica de productos |
-| `/reindex` | POST | Reindexa productos/artículos en embeddings |
-
-Todas las respuestas son JSON. Los errores devuelven status HTTP 4xx/5xx con mensaje de error.
-
-### Rutas de UI (App Router)
-
-#### Comprador (`(shop)`)
-
-- `/` — Página de inicio (catálogo)
-- `/buscar?q=...` — Búsqueda con dos pestañas (exacta + IA)
-- `/producto/[id]` — Detalle de producto + reseñas + Q&A
-- `/carrito` — Carrito de compras
-- `/pedidos` — Historial de órdenes
-- `/pedidos/[id]` — Detalle de orden
-- `/asistente` — Chat del asistente de soporte
-- `/soporte` — Centro de ayuda (FAQ)
-
-#### Vendedor (`(seller)/vendedor/`)
-
-- `/productos` — Lista de productos del vendedor
-- `/productos/[id]/editar` — Editar producto
-- `/publicar` — Crear nuevo producto
-- `/pedidos` — Gestión de órdenes (kanban)
-
-#### Autenticación (`(auth)`)
-
-- `/login` — Ingreso
-- `/register` — Registro
-
----
-
-## Base de Datos
-
-### Estructura General
-
-La BD está en PostgreSQL (Supabase) con **Row-Level Security (RLS)** habilitado. Todas las tablas usan UUIDs como PKs. Las transacciones críticas (checkout) se manejan vía funciones SQL.
-
-### Tablas Principales
-
-| Tabla | Descripción | Relaciones Clave |
-|---|---|---|
-| **`profiles`** | Usuarios autenticados (por autenticación de Supabase) | FK: `auth.users.id` |
-| **`products`** | Catálogo de productos | FK: `seller_id` (profiles), `category_id` (categories) |
-| **`product_images`** | Galerías de imágenes por producto | FK: `product_id` (products) |
-| **`categories`** | Categorías de productos (laptops, smartphones, etc.) | Jerarquía: `parent_id` (self-referencial) |
-| **`cart_items`** | Carrito del comprador | FK: `buyer_id` (profiles), `product_id` (products) |
-| **`orders`** | Órdenes de compra | FK: `buyer_id` (profiles), estado: pendiente/pagado/enviado/entregado/cancelado |
-| **`order_items`** | Items individuales de una orden (snapshots de precio/título) | FK: `order_id` (orders), `product_id` (products), `seller_id` (profiles) |
-| **`reviews`** | Reseñas de productos | FK: `product_id` (products), `buyer_id` (profiles), rating: 1-5 |
-| **`questions`** | Preguntas de compradores | FK: `product_id` (products), `user_id` (profiles) |
-| **`answers`** | Respuestas a preguntas | FK: `question_id` (questions), `user_id` (profiles) |
-| **`favorites`** | Productos favoritos | FK: `buyer_id` (profiles), `product_id` (products) |
-| **`product_views`** | Historial de vistas de producto (analytics) | FK: `product_id` (products), `user_id` (profiles) |
-| **`support_articles`** | Artículos de FAQ para el asistente | — |
-| **`support_tickets`** | Tickets de soporte del cliente | FK: `user_id` (profiles) |
-| **`ticket_messages`** | Mensajes dentro de un ticket | FK: `ticket_id` (support_tickets), `user_id` (profiles) |
-| **`knowledge_embeddings`** | Índice de embeddings (384D) para búsqueda semántica | Discriminado por `source_type`: 'producto' \| 'articulo_soporte' |
-
-### Índices Clave
-
-- **Vector search:** `knowledge_embeddings.embedding` (pgvector con L2 distance)
-- **Performance:** índices en `product_id`, `category_id`, `buyer_id`, `seller_id`, `status`
-
-### Políticas RLS (Row-Level Security)
-
-| Tabla | Política | Lógica |
-|---|---|---|
-| `products` | SELECT | Público (solo `is_active=true`), vendedor ve los suyos |
-| `orders` | SELECT | Solo el comprador ve sus órdenes |
-| `cart_items` | SELECT/INSERT/UPDATE | Solo el comprador ve/modifica su carrito |
-| `reviews` | INSERT | Solo el comprador puede reseñar |
-| `support_tickets` | SELECT/INSERT | Solo el usuario ve sus tickets |
-| `knowledge_embeddings` | SELECT | Público (para búsqueda) |
-
-### Migraciones
-
-Se encuentran en `supabase/migrations/` (20+). Cada migración:
-1. Crea tablas/índices
-2. Habilita RLS
-3. Define políticas
-4. Configura triggers (ej: reindexación automática al editar producto)
-
-**Comando para aplicar:**
-
-```bash
-supabase db push  # En desarrollo
-# En producción: Supabase CLI con token de proyecto remoto
+```
+mercadotech/
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # Login, register
+│   ├── (shop)/            # Comprador: catálogo, búsqueda, carrito, órdenes, soporte
+│   ├── (seller)/vendedor/ # Vendedor: productos, pedidos
+│   └── api/v1/            # API: chat, búsqueda, reindex
+├── components/            # Componentes React (ui, catalog, cart, orders, etc.)
+├── hooks/                 # Custom hooks (useProducts, useCart, useAuth, etc.)
+├── services/              # Lógica de negocio (sin React)
+├── lib/                   # Configuración compartida
+│   ├── supabase/         # Clientes Supabase
+│   ├── ai/               # Embeddings, chat, RAG context
+│   ├── constants/        # Tunables (modelos, precios, límites)
+│   └── utils.ts          # Utilidades
+├── types/                 # TypeScript types (DTOs, database)
+├── supabase/             # BD y migraciones
+│   ├── migrations/       # 29 migraciones
+│   ├── seed.sql          # Datos de prueba (laboratorio)
+│   └── seed.prod.sql     # Datos de producción (8 categorías + 10 FAQ)
+├── e2e/                  # Tests Playwright
+├── mcp/                  # Servidor Model Context Protocol (10 tools + 6 resources)
+├── scripts/              # Utilidades: index-all.ts para reindexación
+└── docs/                 # Documentación
+    ├── BITACORA.md       # Historial por sesión
+    ├── ARQUITECTURA.md   # Capas y decisiones
+    ├── DEPLOY.md         # Variables, flow, rollback, smoke tests
+    ├── PERFORMANCE.md    # Métricas de performance
+    ├── RAG.md            # Sistema de búsqueda semántica
+    ├── DEBUGGING.md      # Runbook de diagnóstico
+    └── PLAN_CURSO.md     # Plan original (referencia)
 ```
 
 ---
 
-## Contribución
+## Flujo de Datos
 
-### Ciclo de Desarrollo
-
-1. **Crear rama:** `git checkout -b feature/mi-feature`
-2. **Desarrollar:** seguir convenciones en `CLAUDE.md`
-3. **Tests:** `npm run test` debe pasar (201/201)
-4. **Lint + Type:** `npm run lint && npm run type-check`
-5. **E2E:** `npm run test:e2e` (si aplica)
-6. **Validator:** invocar skill `mercadotech-automatic-validator` (gate binario)
-7. **Commit:** mensaje imperativo presente, referencia a fase
-8. **Push & PR:** GitHub Actions ejecuta automáticamente
-
-### Convenciones
-
-Ver `CLAUDE.md` para:
-- Reglas de arquitectura (5 reglas de independencia)
-- Convenciones de código (inglés para código, español para docs)
-- Testing (inyección de Supabase, comportamiento real)
-- Ciclo reviewer → desarrollo → validator → commit
-
----
-
-## Licencia
-
-Proyecto educativo. Sin licencia específica.
+```
+┌─────────────────────────┐
+│      React Frontend     │
+│  (Componentes, Hooks)   │
+└────────┬────────────────┘
+         │
+         ↓
+┌─────────────────────────┐
+│      Services Layer     │
+│   (Lógica de negocio)   │
+└────────┬────────────────┘
+         │
+   ┌─────┴─────┬────────────┬──────────┐
+   │            │            │          │
+   ↓            ↓            ↓          ↓
+┌────────┐  ┌────────┐  ┌───────┐  ┌──────────┐
+│Supabase│  │Hugging │  │Storage│  │Auth(JWT) │
+│   DB   │  │ Face   │  │ (CDN) │  │          │
+└────────┘  └────────┘  └───────┘  └──────────┘
+```
 
 ---
 
-## Contacto & Recursos
+## Uso de la App
 
-- **Bitácora:** `docs/BITACORA.md` (historial acumulativo por sesión)
-- **Debugging:** `docs/DEBUGGING.md` (runbook de diagnóstico)
-- **RAG:** `docs/RAG.md` (sistema de búsqueda semántica)
-- **Arquitectura MCP:** `mcp/AUDIT.md` (auditoría de seguridad)
+### Para Compradores
+
+1. **Registro/Login:** `/register` o `/login`
+2. **Explorar:** `/` (home) o `/buscar` (búsqueda exacta)
+3. **Búsqueda IA:** en `/buscar`, pestaña "Por IA" (busca "laptop ligera" → encuentra MacBooks)
+4. **Detalle:** `/producto/[id]` (galería, reseñas, Q&A)
+5. **Carrito:** `/carrito` (agregar, modificar cantidades)
+6. **Órdenes:** `/pedidos` (historial y detalles)
+7. **Soporte:** `/asistente` (chat) o `/soporte` (FAQ)
+
+### Para Vendedores
+
+1. **Registro como vendedor:** en `/register`, marcar "Quiero vender"
+2. **Panel:** `/vendedor/productos` (lista de productos)
+3. **Publicar:** `/vendedor/publicar` (título, descripción, precio, stock, imágenes)
+4. **Editar:** `/vendedor/productos/[id]/editar`
+5. **Órdenes:** `/vendedor/pedidos` (tablero Kanban: pendiente → pagado → enviado → entregado)
 
 ---
 
-**Última actualización:** Sesión 6 (2026-08-31) — Testing, CI/CD, Debugging
+## Testing
 
-**Estado:** ✅ Verde (CI pasa, 201/201 tests, main protegida, listo para Sesión 7: Performance + Secretos + Deploy)
+### Tests Unitarios (Vitest)
+
+```bash
+npm run test              # Corre los 201 tests
+npm run test:coverage     # Genera reporte HTML (coverage/)
+```
+
+**Cobertura:** 70%+ en servicios, 64%+ en ramas. Mock de Supabase inyectable (NO vi.mock).
+
+### Tests E2E (Playwright)
+
+```bash
+# Prerequisito: el app debe estar compilado y corriendo
+npm run build
+npm run start             # en Terminal 1
+
+# En Terminal 2:
+npm run test:e2e          # Corre los 30 tests (chromium solamente)
+```
+
+**Cobertura:** flujo completo de comprador (navegar → buscar → agregar carrito → checkout).
+
+### CI/CD
+
+Cada push a `main` o PR dispara GitHub Actions:
+- ✅ ESLint + TypeScript check
+- ✅ 201 tests unitarios
+- ✅ 30 tests E2E (contra Supabase local ephemeral)
+- ✅ Compilación de producción
+
+**Branch protection:** `main` requiere que ambos jobs pasen.
+
+---
+
+## Performance y Core Web Vitals
+
+Ver `docs/PERFORMANCE.md` para:
+- Mediciones base (ANTES de optimizaciones)
+- Optimizaciones aplicadas (dynamic imports, image sizes, etc.)
+- Benchmarks finales (Lighthouse ≥90 en Performance)
+
+Objetivos:
+- LCP (Largest Contentful Paint) < 2.5 s
+- CLS (Cumulative Layout Shift) < 0.1
+- INP (Interaction to Next Paint) < 200 ms
+
+---
+
+## Variables de Entorno
+
+### Desarrollo Local (`.env.local`)
+
+Se obtiene de `supabase status -o env` tras `supabase start`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+HUGGINGFACEHUB_API_TOKEN=hf_...  # Opcional, requerido para chat/búsqueda
+```
+
+### Producción (Vercel Dashboard)
+
+Nunca commitear `.env.local`. En Vercel, se cargan a mano en **Project Settings → Environment Variables**:
+- `NEXT_PUBLIC_SUPABASE_URL` (pública)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (pública, RLS protege)
+- `SUPABASE_SERVICE_ROLE_KEY` (secreta, solo servidor)
+- `HUGGINGFACEHUB_API_TOKEN` (secreta)
+- `NEXT_PUBLIC_SITE_URL` (pública, prod URL)
+
+Ver `docs/DEPLOY.md` para detalles de gobernanza.
+
+---
+
+## Despliegue
+
+### Deploy a Vercel (Producción)
+
+1. **Crear proyecto Supabase de producción** (en https://supabase.com/dashboard)
+   - Guardar contraseña de BD
+   - Anotar URL, claves anon y service role
+
+2. **Conectar Vercel a GitHub**
+   - En https://vercel.com/new, importar `growlearnjo/mercadotech`
+   - Next.js se detecta automáticamente
+
+3. **Cargar variables de entorno en Vercel** (sin CLI, vía dashboard)
+   - `NEXT_PUBLIC_SUPABASE_URL` → Production + Preview
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` → Production + Preview
+   - `SUPABASE_SERVICE_ROLE_KEY` → Production + Preview
+   - `HUGGINGFACEHUB_API_TOKEN` → Production + Preview
+   - `NEXT_PUBLIC_SITE_URL` → Production (URL real), Preview (auto)
+
+4. **Deploy automático**
+   - Cada push a `main` → producción
+   - Cada PR → preview con URL propia
+
+5. **Verificación post-deploy** (smoke test en `docs/DEPLOY.md`)
+   - Home carga
+   - Registrarse como vendedor
+   - Publicar 1 producto demo
+   - Asistente responde con FAQ
+   - Logout/login funciona
+
+### Rollback
+
+Si un deploy falla, en Vercel Dashboard → **Deployments → mostrar anterior → Redeploy**. 
+
+**Nota:** El rollback de Vercel NO revierte cambios de base de datos — esos solo se revierten con una migración nueva.
+
+---
+
+## Debugging
+
+Si algo falla, ver `docs/DEBUGGING.md` con:
+- 7 errores típicos (RLS, GRANT role, HF 404, vector dimension, npm lock, MCP stdout, Supabase connection refused)
+- Tabla: síntoma → causa → primer comando
+- Cómo leer logs de CI y Playwright traces
+
+---
+
+## Arquitectura en Profundidad
+
+Ver `docs/ARQUITECTURA.md` para:
+- Las 5 capas (Frontend, Hooks, Services, Supabase, IA)
+- 5 reglas de independencia (un archivo = una responsabilidad, sin barrels, UI nunca importa AI, flujo único de datos, tunables en constants)
+- DTO ENFORCER (servicios mapean respuestas de BD a DTOs limpios, componentes nunca usan tipos crudos de Supabase)
+- Decisiones por sesión (S2: BD y RLS; S3: frontend; S4: RAG; S5: MCP; S6: testing y CI; S7: performance y deploy)
+
+---
+
+## RAG (Búsqueda Semántica)
+
+El sistema de soporte y búsqueda de productos usa RAG (Retrieval-Augmented Generation):
+
+1. **Indexación:** productos y artículos de FAQ se transforman en embeddings (384D, Hugging Face)
+2. **Almacenamiento:** tabla `knowledge_embeddings` con pgvector
+3. **Recuperación:** al buscar, se recuperan los K resultados más cercanos (L2 distance)
+4. **Generación:** el LLM genera respuesta citando las fuentes reales
+
+Ver `docs/RAG.md` para flujo completo y endpoints (`/api/v1/search/semantic`, `/api/v1/chat`, `/api/v1/reindex`).
+
+---
+
+## MCP Server
+
+El proyecto incluye un servidor Model Context Protocol (stdio transport) en `mcp/`:
+- **10 tools** read-only (listar productos, búsqueda, órdenes, etc.)
+- **6 resources** dinámicos (catálogo, FAQ, órdenes, etc.)
+- **3 prompts** (búsqueda guiada, soporte, etc.)
+- **RLS activo:** tools usan cliente anon, no admin
+
+Ver `mcp/README.md` y `mcp/AUDIT.md` para detalles de seguridad.
+
+---
+
+## Convenciones de Código
+
+Ver `CLAUDE.md` en el repo para:
+- Identificadores en inglés (código), español (docs)
+- TypeScript strict mode
+- Service con cliente inyectable (NO viven secretos en código)
+- Hooks encapsulan fetch y estado
+- Componentes cero lógica de negocio
+- DTOs mapean respuestas de BD
+- Tests: Vitest con mock inyectable, Playwright E2E
+- Commits con referencia a fase (ej: `perf: optimizar home for Fase 7.2`)
+
+---
+
+## Próximos Pasos
+
+- **Sesión 8:** Agente de voz y demo final del marketplace
+
+---
+
+## Ayuda & Recursos
+
+| Recurso | Qué tiene |
+|---|---|
+| `docs/BITACORA.md` | Historial de sesiones (qué se construyó, decisiones, desviaciones) |
+| `docs/ARQUITECTURA.md` | Capas, reglas de independencia, decisiones por sesión |
+| `docs/DEPLOY.md` | Gobernanza de secretos, flujo de despliegue, smoke tests, rollback |
+| `docs/PERFORMANCE.md` | Métricas Core Web Vitals, optimizaciones, Lighthouse scores |
+| `docs/RAG.md` | Sistema de búsqueda semántica, embeddings, endpoints |
+| `docs/DEBUGGING.md` | Runbook: 7 errores típicos, tabla síntoma → fix |
+| `mcp/README.md` | Tools, resources, prompts del servidor MCP |
+| `CLAUDE.md` | Contrato de desarrollo (reglas, convenciones, estado del proyecto) |
+
+---
+
+**Última actualización:** Sesión 7 (2026-09-02) — Performance, Secretos, Deploy
+
+**Estado:** ✅ En desarrollo (Fase 7.4 en curso: despliegue en Vercel)

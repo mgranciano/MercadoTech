@@ -971,15 +971,130 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 ---
 
-## Próximos pasos (Sesión 3+)
+## Sesión 3 — Frontend y Capas de Aplicación
 
-- **Sesión 3:** UI (auth, catalog, seller dashboard, checkout)
-- **Sesión 4:** IA (RAG para FAQ, embeddings en products)
-- **Sesión 5:** Skills personalizadas, protocolo MCP
-- **Sesión 6+:** Webhooks, real-time, pagos, voz
+**Construido:** UI completa (React 19 + Next.js 16 App Router) con componentes reutilizables, custom hooks para estado y fetch, services como capa de lógica de negocio sin React, sin barrels (`index.ts`).
+
+**Capas:**
+- **Presentation:** `components/` (ui/, shared/, auth/, catalog/, product/, cart/, orders/, seller/, etc.)
+- **Application:** `hooks/` (useProducts, useCart, useAuth, useOrders, useSellerOrders, etc.) + `services/` (products.service.ts, orders.service.ts, etc.)
+- **Data Access:** `lib/supabase/` (client, server, admin, middleware)
+
+**Convenciones:**
+- Servicio con cliente inyectable: `getProductById(id: string, supabase: Client = createClient())`
+- `numeric` del API (`price`) llega como `string` desde PostgREST → convertido a `number` en service → componente recibe `number`
+- Componentes reciben `image_url` ya resuelta (no `image_path`)
+- Filtros de catálogo en URL (`useSearchParams`) para compartibilidad
 
 ---
 
-**Documentación:** supabase/migrations/, supabase/tests/rls-validation.sql
+## Sesión 4 — IA y RAG
 
-**Actualizar:** Este documento al agregar tablas, políticas o cambios arquitectónicos.
+**Construido:** Sistema completo de búsqueda semántica (RAG):
+- **Embeddings:** Productos y artículos de soporte indexados en 384D (Hugging Face sentence-transformers)
+- **Almacenamiento:** Tabla `knowledge_embeddings` con pgvector, discriminada por `source_type` ('producto' | 'articulo_soporte')
+- **Endpoints:** `/api/v1/chat`, `/api/v1/search/semantic`, `/api/v1/reindex`
+- **Cliente:** `lib/ai/` con context-builder, vector-search.service, chat vía HuggingFace Inference API
+
+**Decisiones:**
+- UI NUNCA importa `lib/ai/` (server-only) — acceso solo vía Route Handlers
+- Admin client permitido en `lib/supabase/admin.ts` y scripts/ (nunca inyectado a tools)
+- `knowledge_embeddings` discriminada: fichas huérfanas posibles, descartadas al hidratar
+
+**Tunables en `lib/constants/ai.ts`:** modelos, dimensión embedding (384D), umbral similitud, presupuesto contexto
+
+---
+
+## Sesión 5 — MCP Server y Extensibilidad
+
+**Construido:** Servidor Model Context Protocol (stdio) en `mcp/src/`:
+- **10 tools** read-only: listar productos, búsqueda, órdenes, detalles, etc. (Zod validation)
+- **6 resources:** catálogo dinámico, FAQ, órdenes, vendedores, etc. (degradación elegante)
+- **3 prompts:** búsqueda guiada, soporte, contexto inyectado
+- **Validación:** Zod en TODOS los tools, nunca `any`
+- **RLS activo:** Tools usan cliente anon, no admin
+
+**Arquitectura:**
+- Reutilización: `mcp/src/shared/adapters.ts` importa services existentes
+- Aislamiento: admin client solo en `context.ts`, nunca inyectado a tools
+- Degradación: si Supabase falla, recursos devuelven lista vacía o error claro
+
+---
+
+## Sesión 6 — Testing y CI/CD
+
+**Construido:** Red de seguridad completa:
+- **Tests unitarios:** Vitest (201 tests, 70%+ cobertura servicios). Mock inyectable de Supabase (NO `vi.mock()`).
+- **Tests E2E:** Playwright (30 tests, chromium, buyer flow + negatives). Page objects + fixtures con auth mock.
+- **CI/CD:** GitHub Actions — checks (lint, type-check, test) + e2e contra Supabase ephemeral, sin secretos.
+- **npm 11.6.2 pinning:** `packageManager` en package.json, lockfile v3+
+
+**Decisiones:**
+- Inyección vs vi.mock: test control fino sobre datos por caso (ej: precios como string, convertidos a number)
+- E2E contra stack local ephemeral (no producción)
+- Test IDs kebab-case para Playwright (nav-cart-link, shop-product-card, etc.)
+- Gate binario: 1 test fallido → validator FALLIDA → no merge
+
+**Coverage:** 70.58% statements, 66.74% branches, 59.4% functions (agregado); por-servicio 70-95%.
+
+---
+
+## Sesión 7 — Performance y Despliegue
+
+**Construido:** Producto en producción con performance medida y secretos seguros.
+
+### Performance (7.2)
+- **Medición:** Lighthouse móvil (DevTools) contra build de producción (NO next dev)
+- **Core Web Vitals:** LCP < 2.5s, CLS < 0.1, INP < 200ms
+- **Optimizaciones:** dynamic import de ChatWindow, OrdersKanban, SortableImageGallery (si la medición lo justifica)
+- **Turbopack:** Bundle-analyzer NO aplica; medición por resumen de build + Lighthouse
+- **Tabla en `docs/PERFORMANCE.md`:** ANTES (base), cambio justificado, DESPUÉS
+
+### Gobernanza de Secretos (7.3)
+- **6 variables** en tabla: NEXT_PUBLIC_SUPABASE_URL, ANON_KEY, SERVICE_ROLE_KEY, HUGGINGFACEHUB_API_TOKEN, SITE_URL, HF_CHAT_MODEL
+- **Vercel dashboard:** Carga a mano (Production + Preview), NUNCA en CLI ni en Actions
+- **GitHub Actions:** CERO secretos (CI usa stack local ephemeral con credenciales dinámicas)
+- **Greps anti-fuga:** hf_, sb_secret, eyJ — todos vacíos
+
+### Despliegue (7.4)
+- **Supabase hosted:** BD remota con migraciones vía `supabase db push`
+- **Seed producción:** `seed.prod.sql` (8 categorías + 10 FAQ, SIN usuarios/productos — catálogo nace vacío)
+- **Vercel:** Importar repo por interfaz, cargar variables a mano, deploy automático PR (preview) + merge (producción)
+- **Branch protection:** `main` requiere checks + e2e verdes
+- **Smoke test:** flujo completo demostra PR bloqueado en rojo, preview con URL, merge en verde → producción
+
+### Documentación (7.5)
+- **README:** Del producto (dev nuevo levanta proyecto solo con el README)
+- **PLAN_CURSO.md:** Preserva plan original del curso (referencia)
+- **ARQUITECTURA:** Actualizada S2-S7 (esta sección)
+- **DEPLOY.md:** Variables, flujo, rollback (Vercel Deployments → redeploy anterior)
+
+---
+
+## Decisiones Transversales (S1-S7)
+
+| Decisión | Por qué | Beneficio |
+|---|---|---|
+| **5 reglas de independencia** | Un archivo = una responsabilidad | Mantenibilidad, testing |
+| **Sin barrels** | Importa `@/hooks/useCart`, no `@/hooks` | Dependencias claras, tree-shaking |
+| **DTO ENFORCER** | Services mapean respuestas BD a DTOs limpios, componentes nunca usan tipos crudos | Desacoplamiento, cambios BD no rompen UI |
+| **Inyección sobre vi.mock()** | Tests controlan datos por caso | Realismo, rapidez |
+| **RLS como fuente de verdad** | La BD autoriza, no la app | Seguridad, imposible bypassear |
+| **Snapshots en ORDER_ITEMS** | Precios/títulos inmutables post-orden | Histórico real, auditoría |
+| **CI sin secretos** | Stack ephemeral + credenciales dinámicas | Seguridad, reproducibilidad |
+| **Performance medida** | ANTES → CAMBIO → DESPUÉS, todo en tabla | Decisiones basadas en datos, no intuición |
+| **Deploy por interfaz Vercel** | Carga manual de vars, no CLI | Claridad, menos magia |
+
+---
+
+## Próximos Pasos
+
+- **Sesión 8:** Agente de voz, demo final
+
+---
+
+**Última actualización:** Sesión 7 (2026-09-02)
+
+**Documentación:** supabase/migrations/, supabase/tests/rls-validation.sql, docs/DEPLOY.md, docs/PERFORMANCE.md, docs/RAG.md, docs/DEBUGGING.md, mcp/AUDIT.md
+
+**Actualizar:** Este documento al agregar capas, cambios arquitectónicos o decisiones nuevas en futuras sesiones.

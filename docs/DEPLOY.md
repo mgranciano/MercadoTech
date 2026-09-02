@@ -86,11 +86,131 @@ grep "secrets\." .github/workflows/ci.yml
 
 ## Sección 2: Flujo de despliegue (Fase 7.4)
 
-*(a completar en la Fase 7.4)*
+### Resumen del flujo PR → Producción
+
+```
+1. Developer hace push a rama feature
+   ↓
+2. GitHub Actions CI corre (checks + e2e contra Supabase local ephemeral)
+   ↓
+3. Si CI pasa: PR puede mergear a main
+   ↓
+4. Si CI falla: Branch protection bloquea merge (rojo)
+   ↓
+5. Developer arregla, re-pushea → CI verde
+   ↓
+6. Merge a main permitido
+   ↓
+7. Vercel detecta push a main → deploy automático a producción
+   ↓
+8. URL pública actualizada con nuevo código
+```
+
+### Pasos antes de primera producción (Sesión 7.4)
+
+| Paso | Quién | Qué |
+|---|---|---|
+| 1 | Claude | Crear `supabase/seed.prod.sql` (8 categorías + 10 FAQ, SIN datos de usuario) |
+| 2 | Tú | `supabase login` → `supabase link --project-ref <ref>` → `supabase db push` (aplica 29 migraciones a hosted) |
+| 3 | Tú | Pegar `seed.prod.sql` en SQL Editor de Supabase dashboard (ejecutar UNA vez) |
+| 4 | Tú | Indexar FAQ: `NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/index-all.ts` |
+| 5 | Tú | En Supabase Auth → Providers: desactivar "Confirm email" (decisión 8) |
+| 6 | Tú | En Vercel: Add New → Project → importar `growlearnjo/mercadotech` → cargar 5-6 variables (a mano, una por una) → Deploy |
+| 7 | Tú + Claude | Verificar first deploy: home carga, catálogo vacío (esperado), no errores auth |
+| 8 | Tú | GitHub Settings → Branches → Add rule para `main`: requiere checks verdes, sin bypass |
+| 9 | Tú + Claude | PR de prueba (`deploy-smoke` con cambio trivial): PR → checks + preview → merge bloqueado en rojo → CI verde → merge → cambio en producción |
+| 10 | Tú | Smoke test completo: registrarse, publicar producto demo, soporte responde, logout/login |
+
+### Post-deploy: Síntomas y diagnóstico
+
+| Síntoma | Causa | Solución |
+|---|---|---|
+| Build falla en Vercel pero pasa local | Falta env var o distinta Node version | Revisar Project Settings → Environment Variables; alinear Node (debe ser 22+) |
+| "Invalid API key" / auth rota | Clave pegada con espacios, de otro proyecto, o no redeploy tras cambiar env | Re-pegar desde dashboard Supabase; Vercel Deployments → Redeploy |
+| `/soporte` dice "no encontré información" | FAQ sembrada pero SIN indexar (falló paso 4) | Correr `scripts/index-all.ts` con env de prod inline; verificar 10 embeddings en dashboard |
+| El chat falla con error de proveedor | Token HF no cargado en Vercel o modelo gratuito rotó | Cargar `HUGGINGFACEHUB_API_TOKEN` + Redeploy; si es rotación: actualizar `HUGGINGFACE_CHAT_MODEL` |
+| Imágenes rotas en producción | Producto demo aún sin imagen, o path incorrecto | `ProductImage` muestra placeholder (esperado con catálogo nuevo); subir imagen en UI |
 
 ---
 
-## Sección 3: Rollback y marcha atrás (Fase 7.5)
+## Sección 3: Rollback y marcha atrás
 
-*(a completar en la Fase 7.5)*
+### ¿Cuándo rollback?
+
+- **Un deploy en producción salió mal** (errores críticos, ruptura de UI, funcionalidad no funciona)
+- **Necesitas volver URGENTEMENTE** al deploy anterior
+- **Nota:** El rollback de Vercel **NO revierte cambios de base de datos**
+
+### Cómo hacer rollback en Vercel
+
+1. Abre el dashboard de Vercel → Project → **Deployments**
+2. Busca el deploy anterior (el que funcionaba)
+3. Haz clic en **⋯ (más opciones)** → **Promote** o **Redeploy**
+4. Vercel vuelve a ejecutar el build y start de ese commit
+5. **En ~30-60 segundos**, la URL pública refleja el código anterior
+
+**Ejemplo:**
+```
+Current (broken):  deploy-20260902-150000  ← URL pública aquí
+Previous (ok):     deploy-20260902-140000  ← Clica Redeploy
+Result:            URL pública ahora serve deploy-20260902-140000
+```
+
+### Lo que rollback NO revierte
+
+**Base de datos:** Si el deploy incluyó migraciones o cambios de datos, el rollback NO los deshace.
+
+**Ejemplo problema:**
+```
+Commit A: Migración 0030_add_field.sql + código que usa field
+  ↓ Deploy OK
+Commit B: Migración 0031_drop_field.sql + código sin field
+  ↓ Deploy → Error (field no existe)
+  ↓ Rollback a A
+  ↓ Código espera field, pero DB still NO lo tiene (migración 0031 ya corrió)
+```
+
+**Solución:** Si rollback encuentra error de BD, debe haber preparada una "contra-migración" (reverse migration). En PostgreSQL:
+```sql
+-- Migración 0032_restore_field.sql
+ALTER TABLE products ADD COLUMN field_name text;
+```
+
+### Plan de marcha atrás completo
+
+1. **Antes de major change:** backup de BD en Supabase dashboard (Settings → Backups)
+2. **Deploy nuevo:** Vercel corre build + start
+3. **Síntoma de error:** dentro de 5min, revertir via Redeploy anterior
+4. **Si BD está corrupta:** restaurar from backup en Supabase dashboard
+5. **Post-rollback:** investigar root cause, arreglar, redeploy
+
+### Checklist pre-deploy
+
+- [ ] Todos los tests pasan (`npm run test`, `npm run test:e2e`)
+- [ ] Lint y type-check limpios
+- [ ] CI verde en GitHub
+- [ ] Las variables de entorno están cargadas en Vercel (verificar en Project Settings)
+- [ ] Si hay migraciones nuevas: testeadas en local contra Supabase local
+- [ ] Backup de BD hecho (si es cambio crítico)
+- [ ] Equipo notificado (si es laboratorio, documentar en Slack o equiv.)
+
+### Monitoreo post-deploy
+
+1. **Inmediato (primeros 5 min):**
+   - Carga la URL de producción en navegador
+   - Home carga sin errores
+   - Registrarse funciona
+   - Búsqueda funciona
+
+2. **5-15 min:**
+   - Publicar un producto (vendedor)
+   - Agregar carrito (comprador)
+   - Asistente responde preguntas
+
+3. **15-60 min:**
+   - Navegar todas las rutas
+   - Verificar en DevTools que no hay errores 4xx/5xx en Network
+   - Revisar Vercel logs si hay errores
+
+**Si algo falla:** Ejecutar Redeploy al anterior deploy dentro de este window.
 
