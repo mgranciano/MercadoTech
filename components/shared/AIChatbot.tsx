@@ -14,7 +14,7 @@ const CHIPS = [
 export function AIChatbot() {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState("")
-  const { messages, loading, sendMessage } = useChat({ mode: "soporte" })
+  const { messages, loading, sendMessage } = useChat({ mode: "compras" })
 
   const send = (text: string) => {
     setOpen(true)
