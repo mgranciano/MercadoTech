@@ -1,13 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useChat } from "@/hooks/useChat"
 import { cn } from "@/lib/utils"
-
-interface ChatMessage {
-  from: "me" | "bot"
-  text: string
-  source?: string
-}
 
 const CHIPS = [
   "¿Dónde está mi pedido?",
@@ -16,32 +11,16 @@ const CHIPS = [
   "Recomiéndame una laptop",
 ]
 
-// UI-only por ahora (fase de diseño): sin RAG ni llamadas a API todavía,
-// eso llega en la sesión 4. Esto solo demuestra la interfaz de chat.
-const PLACEHOLDER_REPLY =
-  "Gracias por tu mensaje. Todavía no puedo consultar pedidos ni catálogo en tiempo real — esa parte llega en la próxima sesión."
-
 export function AIChatbot() {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState("")
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      from: "bot",
-      text: "Hola. Soy el Asistente MercadoTech AI. Consulto tus pedidos, políticas y catálogo en tiempo real. ¿En qué te ayudo?",
-    },
-  ])
+  const { messages, loading, sendMessage } = useChat({ mode: "soporte" })
 
   const send = (text: string) => {
     setOpen(true)
     setDraft("")
-    setMessages((prev) => [
-      ...prev,
-      { from: "me", text },
-      { from: "bot", text: PLACEHOLDER_REPLY },
-    ])
+    sendMessage(text)
   }
-
-  const userMessageCount = messages.filter((m) => m.from === "me").length
 
   return (
     <>
@@ -94,28 +73,11 @@ export function AIChatbot() {
             </header>
 
             <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-muted/30 p-4">
-              {messages.map((m, i) => (
-                <div key={i} className={cn("flex", m.from === "me" ? "justify-end" : "justify-start")}>
-                  <div
-                    className={cn(
-                      "max-w-[84%] text-pretty px-3.5 py-3 text-[13.5px] leading-relaxed sm:max-w-[80%]",
-                      m.from === "me"
-                        ? "rounded-[16px_16px_5px_16px] bg-gradient-to-r from-primary to-accent text-white"
-                        : "rounded-[16px_16px_16px_5px] border border-border bg-card text-card-foreground"
-                    )}
-                  >
-                    {m.text}
-                    {m.source && (
-                      <div className="mt-2.5 border-t border-primary/10 pt-2 font-mono text-[10px] text-accent">
-                        ✦ fuente: {m.source}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {userMessageCount < 2 && (
+              {messages.length === 0 && (
                 <div>
+                  <div className="mb-4 px-2 py-2 text-sm text-card-foreground">
+                    Hola. Soy el Asistente MercadoTech AI. Consulto tus pedidos, políticas y catálogo en tiempo real. ¿En qué te ayudo?
+                  </div>
                   <div className="mb-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-muted-foreground">
                     tips frecuentes
                   </div>
@@ -132,6 +94,30 @@ export function AIChatbot() {
                   </div>
                 </div>
               )}
+
+              {messages.map((m) => (
+                <div key={m.id} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+                  <div
+                    className={cn(
+                      "max-w-[84%] text-pretty px-3.5 py-3 text-[13.5px] leading-relaxed sm:max-w-[80%]",
+                      m.role === "user"
+                        ? "rounded-[16px_16px_5px_16px] bg-gradient-to-r from-primary to-accent text-white"
+                        : "rounded-[16px_16px_16px_5px] border border-border bg-card text-card-foreground"
+                    )}
+                  >
+                    {m.content}
+                    {m.sources && m.sources.length > 0 && (
+                      <div className="mt-2.5 border-t border-primary/10 pt-2 space-y-1 text-[10px] text-accent">
+                        {m.sources.map((src) => (
+                          <div key={src.source_id} className="font-mono">
+                            ✦ {src.source_type === "articulo_soporte" ? "artículo" : "producto"}: {src.source_id.slice(0, 8)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <footer className="flex shrink-0 items-end gap-2.5 border-t border-border bg-card p-3.5 pb-5 sm:pb-3.5">
@@ -140,20 +126,22 @@ export function AIChatbot() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
+                  if (e.key === "Enter" && !e.shiftKey && !loading) {
                     e.preventDefault()
                     if (draft.trim()) send(draft.trim())
                   }
                 }}
+                disabled={loading}
                 placeholder="Escribe tu pregunta…"
-                className="max-h-24 min-h-[46px] flex-1 resize-none rounded-2xl border border-border bg-muted/30 px-3.5 py-3 text-sm outline-none focus:border-ai-cyan focus:bg-card"
+                className="max-h-24 min-h-[46px] flex-1 resize-none rounded-2xl border border-border bg-muted/30 px-3.5 py-3 text-sm outline-none focus:border-ai-cyan focus:bg-card disabled:opacity-50"
               />
               <button
-                onClick={() => draft.trim() && send(draft.trim())}
+                onClick={() => draft.trim() && !loading && send(draft.trim())}
+                disabled={loading}
                 aria-label="Enviar"
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-ai-cyan to-accent text-lg text-white shadow-[0_6px_18px_rgba(123,47,247,.35)] transition hover:-translate-y-0.5"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-ai-cyan to-accent text-lg text-white shadow-[0_6px_18px_rgba(123,47,247,.35)] transition hover:-translate-y-0.5 disabled:opacity-50"
               >
-                ✦
+                {loading ? "⏳" : "✦"}
               </button>
             </footer>
           </section>
